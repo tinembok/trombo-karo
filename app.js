@@ -295,7 +295,7 @@ resultsDiv.innerHTML = filtered.map(d => `
       </div>
     </div>
   `).join('');
-
+}
 // ===== HUBUNGAN FUNCTIONS =====
 function initHubunganPage() {
   updateSelectOptions();
@@ -407,7 +407,7 @@ function filterByMarga(marga) {
   document.getElementById('searchInput').value = marga;
   showPage('cari');
   cariKeluarga();
-}
+ }
 
 // ===== KAMERA / FACE RECOGNITION =====
 let videoStream = null;
