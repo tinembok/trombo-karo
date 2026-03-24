@@ -1,0 +1,33 @@
+{
+  "name": "Trombo Karo",
+  "short_name": "TromboKaro",
+  "description": "Aplikasi Silsilah Keluarga Karo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#2E7D32",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect fill=%22%232E7D32%22 width=%22192%22 height=%22192%22/><text x=%2296%22 y=%22120%22 font-size=%22100%22 text-anchor=%22middle%22>🌳</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect fill=%22%232E7D32%22 width=%22512%22 height=%22512%22/><text x=%22256%22 y=%22320%22 font-size=%22280%22 text-anchor=%22middle%22>🌳</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["lifestyle", "social"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 844%22><rect fill=%22%23f5f5f5%22 width=%22390%22 height=%22844%22/><text x=%22195%22 y=%22422%22 font-size=%2260%22 text-anchor=%22middle%22>📱 Trombo Karo</text></svg>",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
