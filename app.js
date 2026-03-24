@@ -88,13 +88,13 @@ async function loadData() {
     allData = [
       {
         id: 1,
-        nama: 'Budi Ginting',
+        nama: 'suhanta Ginting',
         marga: 'Ginting',
-        bapa: 'Andi Ginting',
-        nande: 'Siti Br Ginting',
-        ndehara: 'Rina Karo-Karo',
-        anak: ['Ani Ginting', 'Doni Ginting'],
-        saudara: ['Ahmad Ginting', 'Sari Ginting'],
+        bapa: 'lombang Ginting',
+        nande: 'pengalaman kaban',
+        ndehara: 'muliati kaban',
+        anak: [''],
+        saudara: ['tarsim Ginting', 'lunas Ginting', 'fintalit Ginting'],
         alamat: 'Desa Simpang Empat',
         nowa: '081234567890',
         foto: null
