@@ -6,7 +6,7 @@
 // ===== CONFIG =====
 const CONFIG = {
   // GANTI DENGAN URL APPS SCRIPT ANDA SETELAH DEPLOY
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxO9aC_pZYx2sQ1YRQbCS169ndYhnl8QtjgakipfapDMVJzLlOcCn7TsntEHpwWnEWu/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec',
   
   // Merga Silima
   MARGA_KARO: ['Ginting', 'Karo-Karo', 'Perangin-angin', 'Sembiring', 'Tarigan']
