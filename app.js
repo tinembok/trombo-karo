@@ -345,41 +345,60 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
-  // Logika sederhana untuk demo
-  // Nanti bisa dikembangkan lebih kompleks
+  // Normalisasi: pastikan kita menggunakan huruf kecil sesuai data dari database
+  const userA = {
+    nama: (a.nama || "").toLowerCase(),
+    marga: (a.marga || "").toLowerCase(),
+    bapa: (a.bapa || "").toLowerCase(),
+    nande: (a.nande || "").toLowerCase(),
+    saudara: (a.saudara || []).map(s => s.toLowerCase())
+  };
   
-  if (a.marga === b.marga) {
-    if (a.bapa === b.bapa) {
-      return {
-        jenis: 'Senina/Turang',
-        deskripsi: 'Saudara kandung sebapa'
-      };
-    }
+  const userB = {
+    nama: (b.nama || "").toLowerCase(),
+    marga: (b.marga || "").toLowerCase(),
+    bapa: (b.bapa || "").toLowerCase(),
+    nande: (b.nande || "").toLowerCase(),
+    saudara: (b.saudara || []).map(s => s.toLowerCase())
+  };
+
+  // 1. Cek Senina / Turang (Satu Ayah)
+  if (userA.bapa === userB.bapa && userA.bapa !== "") {
     return {
-      jenis: 'Rakut Sitelu',
-      deskripsi: 'Satu marga, berbeda bapa'
+      jenis: 'Senina / Turang',
+      deskripsi: 'Saudara kandung sebapa (Satu darah/Turang)'
     };
   }
-  
-  // Cek impah (anak dari saudara)
-  if (a.saudara.includes(b.bapa) || b.saudara.includes(a.bapa)) {
-    return {
-      jenis: 'Impal',
-      deskripsi: 'Anak dari saudara (keponakan)'
-    };
-  }
-  
-  // Cek kali bubu
-  if (a.nande === b.nande && a.bapa !== b.bapa) {
+
+  // 2. Cek Kali Bubu (Pihak Keluarga Ibu)
+  // Hubungan ini terjadi jika Bapa dari si B adalah Saudara dari Nande si A
+  // Atau jika si B adalah saudara laki-laki dari Nande si A
+  if (userA.nande !== "" && (userB.nama === userA.nande || userB.saudara.includes(userA.nande))) {
     return {
       jenis: 'Kali Bubu',
-      deskripsi: 'Saudara seibu berbeda ayah'
+      deskripsi: 'Pihak keluarga dari Nande (Pemberi Gadis)'
     };
   }
-  
+
+  // 3. Cek Rakut Sitelu (Satu Marga)
+  if (userA.marga === userB.marga && userA.marga !== "") {
+    return {
+      jenis: 'Sembuyak / Senina',
+      deskripsi: 'Satu marga, berbeda bapa (Rakut Sitelu)'
+    };
+  }
+
+  // 4. Cek Impal (Anak dari Saudara Ibu/Ayah yang berbeda jenis kelamin)
+  if (userA.saudara.includes(userB.bapa) || userB.saudara.includes(userA.bapa)) {
+    return {
+      jenis: 'Impal',
+      deskripsi: 'Anak dari saudara (Keluarga dekat)'
+    };
+  }
+
   return {
     jenis: 'Tutur Siwaluh',
-    deskripsi: 'Hubungan dalam adat Karo'
+    deskripsi: 'Hubungan kekerabatan umum dalam adat Karo'
   };
 }
 
