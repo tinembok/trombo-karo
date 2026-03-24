@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🌳 Trombo Karo</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading" class="loading-screen">
+    <div class="spinner"></div>
+    <p>Memuat Trombo Karo...</p>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>🌳 Trombo Karo</h1>
+      <p>Silsilah Keluarga Karo</p>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    
+    <!-- Navigation Menu -->
+    <nav class="nav-menu" id="navMenu">
+      <button class="nav-btn active" onclick="showPage('home')">
+        <span>🏠</span>
+        <small>Beranda</small>
+      </button>
+      <button class="nav-btn" onclick="showPage('input')">
+        <span>➕</span>
+        <small>Input</small>
+      </button>
+      <button class="nav-btn" onclick="showPage('cari')">
+        <span>🔍</span>
+        <small>Cari</small>
+      </button>
+      <button class="nav-btn" onclick="showPage('hubungan')">
+        <span>👥</span>
+        <small>Hubungan</small>
+      </button>
+      <button class="nav-btn" onclick="showPage('kamera')">
+        <span>📷</span>
+        <small>Kamera</small>
+      </button>
+    </nav>
+
+    <!-- PAGE: HOME -->
+    <section id="page-home" class="page active">
+      <div class="hero">
+        <h2>Selamat Datang</h2>
+        <p>Aplikasi silsilah keluarga Karo untuk menemukan Rakut Sitelu, Impal, dan Kali Bubu</p>
+      </div>
+      
+      <div class="stats-cards">
+        <div class="stat-card">
+          <span class="stat-icon">👨‍👩‍👧‍👦</span>
+          <span class="stat-number" id="totalKeluarga">0</span>
+          <span class="stat-label">Keluarga</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🏛️</span>
+          <span class="stat-number" id="totalMarga">5</span>
+          <span class="stat-label">Marga</span>
+        </div>
+      </div>
+
+      <div class="marga-section">
+        <h3>Merga Silima</h3>
+        <div class="marga-grid">
+          <div class="marga-item" onclick="filterByMarga('Ginting')">
+            <span class="marga-icon">G</span>
+            <span>Ginting</span>
+          </div>
+          <div class="marga-item" onclick="filterByMarga('Karo-Karo')">
+            <span class="marga-icon">K</span>
+            <span>Karo-Karo</span>
+          </div>
+          <div class="marga-item" onclick="filterByMarga('Perangin-angin')">
+            <span class="marga-icon">P</span>
+            <span>Perangin-angin</span>
+          </div>
+          <div class="marga-item" onclick="filterByMarga('Sembiring')">
+            <span class="marga-icon">S</span>
+            <span>Sembiring</span>
+          </div>
+          <div class="marga-item" onclick="filterByMarga('Tarigan')">
+            <span class="marga-icon">T</span>
+            <span>Tarigan</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: INPUT FORM -->
+    <section id="page-input" class="page">
+      <div class="form-header">
+        <h2>📝 Input Data Keluarga</h2>
+        <p>Isi data dengan lengkap</p>
+      </div>
+
+      <form id="formInput" class="input-form">
+        <!-- Foto -->
+        <div class="form-section">
+          <label class="section-title">📷 Foto</label>
+          <div class="photo-upload">
+            <div class="photo-preview" id="photoPreview">
+              <span>📷</span>
+              <small>Klik untuk ambil foto</small>
+            </div>
+            <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
+            <button type="button" class="btn-camera" onclick="document.getElementById('fotoInput').click()">
+              📷 Kamera / Upload
+            </button>
+          </div>
+        </div>
+
+        <!-- Data Pribadi -->
+        <div class="form-section">
+          <label class="section-title">👤 Data Pribadi</label>
+          
+          <div class="form-group">
+            <label>Nama Lengkap *</label>
+            <input type="text" id="nama" placeholder="Contoh: John Ginting" required>
+          </div>
+
+          <div class="form-group">
+            <label>Marga *</label>
+            <select id="marga" required>
+              <option value="">Pilih Marga</option>
+              <option value="Ginting">Ginting</option>
+              <option value="Karo-Karo">Karo-Karo</option>
+              <option value="Perangin-angin">Perangin-angin</option>
+              <option value="Sembiring">Sembiring</option>
+              <option value="Tarigan">Tarigan</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ndehara (Pasangan) -->
+        <div class="form-section">
+          <label class="section-title">💑 Ndehara (Pasangan)</label>
+          <div class="form-group">
+            <input type="text" id="ndehara" placeholder="Nama suami/istri (jika sudah menikah)">
+          </div>
+        </div>
+
+        <!-- Anak (Dynamic Input) -->
+        <div class="form-section">
+          <label class="section-title">👶 Anak</label>
+          <div id="anakContainer">
+            <!-- Dynamic anak inputs will be added here -->
+          </div>
+          <button type="button" class="btn-add" onclick="tambahAnak()">
+            <span>+</span> Tambah Anak
+          </button>
+        </div>
+
+        <!-- Orang Tua -->
+        <div class="form-section">
+          <label class="section-title">👨‍👩 Orang Tua</label>
+          
+          <div class="form-group">
+            <label>Bapa (Ayah) *</label>
+            <input type="text" id="bapa" placeholder="Nama ayah kandung" required>
+          </div>
+
+          <div class="form-group">
+            <label>Nande (Ibu) *</label>
+            <input type="text" id="nande" placeholder="Nama ibu kandung" required>
+          </div>
+        </div>
+
+        <!-- Senina/Turang (Saudara) -->
+        <div class="form-section">
+          <label class="section-title">👫 Senina/Turang (Saudara)</label>
+          <div id="saudaraContainer">
+            <!-- Dynamic saudara inputs will be added here -->
+          </div>
+          <button type="button" class="btn-add" onclick="tambahSaudara()">
+            <span>+</span> Tambah Saudara
+          </button>
+        </div>
+
+        <!-- Kontak -->
+        <div class="form-section">
+          <label class="section-title">📞 Kontak</label>
+          
+          <div class="form-group">
+            <label>Alamat</label>
+            <textarea id="alamat" rows="2" placeholder="Desa/Kecamatan/Kabupaten"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>No. WhatsApp</label>
+            <input type="tel" id="nowa" placeholder="0812xxxxxxxx">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
+            💾 Simpan Data
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- PAGE: CARI -->
+    <section id="page-cari" class="page">
+      <div class="search-header">
+        <h2>🔍 Cari Keluarga</h2>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Cari nama, marga, atau desa...">
+          <button onclick="cariKeluarga()">Cari</button>
+        </div>
+      </div>
+      <div id="searchResults" class="results-container"></div>
+    </section>
+
+    <!-- PAGE: HUBUNGAN -->
+    <section id="page-hubungan" class="page">
+      <div class="hubungan-header">
+        <h2>👥 Cek Hubungan</h2>
+        <p>Temukan hubungan kekerabatan</p>
+      </div>
+
+      <div class="hubungan-form">
+        <div class="form-group">
+          <label>Nama Anda</label>
+          <select id="namaAnda">
+            <option value="">Pilih nama Anda</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nama yang Dicari</label>
+          <select id="namaCari">
+            <option value="">Pilih nama</option>
+          </select>
+        </div>
+
+        <button onclick="cekHubungan()" class="btn-primary">🔍 Cek Hubungan</button>
+      </div>
+
+      <div id="hasilHubungan" class="hasil-hubungan"></div>
+
+      <!-- Menu Hubungan Lainnya -->
+      <div class="hubungan-menu">
+        <h3>Lihat Juga:</h3>
+        <div class="menu-grid">
+          <button onclick="showRakutSitelu()" class="menu-card">
+            <span>🤝</span>
+            <span>Rakut Sitelu</span>
+          </button>
+          <button onclick="showImpal()" class="menu-card">
+            <span>👶</span>
+            <span>Impalndu</span>
+          </button>
+          <button onclick="showSembuyak()" class="menu-card">
+            <span>👥</span>
+            <span>Sembuyak</span>
+          </button>
+          <button onclick="showKaliBubu()" class="menu-card">
+            <span>💑</span>
+            <span>Kali Bubu</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: KAMERA (Face Recognition) -->
+    <section id="page-kamera" class="page">
+      <div class="kamera-header">
+        <h2>📷 Face Recognition</h2>
+        <p>Scan wajah untuk identifikasi</p>
+      </div>
+
+      <div class="kamera-container">
+        <video id="videoKamera" autoplay playsinline></video>
+        <canvas id="canvasKamera" hidden></canvas>
+        
+        <div class="kamera-controls">
+          <button onclick="ambilFoto()" class="btn-shutter">📷</button>
+        </div>
+      </div>
+
+      <div id="hasilRecognition" class="hasil-recognition"></div>
+
+      <div class="recognition-info">
+        <p>💡 Tips: Posisikan wajah di tengah kamera dengan pencayaan yang cukup</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
