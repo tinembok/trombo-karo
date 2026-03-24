@@ -6,7 +6,7 @@
 // ===== CONFIG =====
 const CONFIG = {
   // GANTI DENGAN URL APPS SCRIPT ANDA SETELAH DEPLOY
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyOC7Whe4zuguAmHXSqeX1OGh3aQU4kwX2UyR9V-Osm1y5rbtKoCrqm_tEKefEzPb900Q/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxAoEOj66uv-rdoNP9QPsSdSnPP8luRmwQQ3XtwThXMjkufsoBB4RhCaZ8_yKajzCekuA/exec',
   
   // Merga Silima
   MARGA_KARO: ['Ginting', 'Karo-Karo', 'Perangin-angin', 'Sembiring', 'Tarigan']
@@ -83,30 +83,27 @@ async function loadData() {
   try {
     showToast('Memuat data...');
     
-    // Simulasi data untuk demo
-    // Nanti diganti dengan fetch ke Google Apps Script
-    allData = [
-      {
-        id: 1,
-        nama: 'suhanta Ginting',
-        marga: 'Ginting',
-        bapa: 'lombang Ginting',
-        nande: 'pengalaman kaban',
-        ndehara: 'muliati kaban',
-        anak: [''],
-        saudara: ['tarsim Ginting', 'lunas Ginting', 'fintalit Ginting'],
-        alamat: 'Desa Simpang Empat',
-        nowa: '081234567890',
-        foto: null
-      }
-    ];
+    // Melakukan fetch data asli dari Google Apps Script
+    // Kita menambahkan parameter action=getAll agar doPost di Code.gs tahu apa yang harus dilakukan
+    const response = await fetch(CONFIG.SCRIPT_URL + '?action=getAll');
+    const result = await response.json();
+    
+    if (result.success) {
+      allData = result.data; // Mengisi variabel allData dengan data asli dari Sheet
+      console.log('Data berhasil dimuat:', allData);
+    } else {
+      showToast('Gagal: ' + result.message);
+    }
     
     updateStats();
     updateSelectOptions();
     
   } catch (error) {
     console.error('Error loading data:', error);
-    showToast('Gagal memuat data');
+    showToast('Gagal menyambung ke database');
+    
+    // Data dummy hanya sebagai fallback jika server error
+    allData = []; 
   }
 }
 
