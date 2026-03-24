@@ -114,40 +114,44 @@ async function saveData(data) {
   try {
     showToast('Menyimpan data...');
     
-    // Simpan ke Google Sheets via Apps Script
-    // const response = await fetch(CONFIG.SCRIPT_URL, {
-    //   method: 'POST',
-    //   body: JSON.stringify(data)
-    // });
-    
-    // Simulasi
-    allData.push({
-      id: Date.now(),
-      ...data,
-      foto: fotoBase64
+    // --- PERBAIKAN DI SINI ---
+    // Tambahkan properti action agar Code.gs tahu ini perintah simpan
+    data.action = 'save'; 
+
+    const response = await fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
-    
-    showToast('✅ Data berhasil disimpan!');
-    document.getElementById('formInput').reset();
-    fotoBase64 = null;
-    updatePhotoPreview();
-    
-    // Reset dynamic inputs
-    document.getElementById('anakContainer').innerHTML = '';
-    document.getElementById('saudaraContainer').innerHTML = '';
-    anakCount = 0;
-    saudaraCount = 0;
-    
-    updateStats();
-    
-    // Switch to home
-    setTimeout(() => {
-      showToast('Silakan cek menu Hubungan untuk melihat Rakut Sitelu');
-    }, 1500);
+
+    const result = await response.json(); // Ambil respon dari Google Script
+
+    if (result.success) {
+      // Jika benar-benar sukses di database
+      allData.push({
+        id: result.id,
+        ...data
+      });
+      
+      showToast('✅ ' + result.message);
+      document.getElementById('formInput').reset();
+      fotoBase64 = null;
+      updatePhotoPreview();
+      
+      // Reset input dinamis
+      document.getElementById('anakContainer').innerHTML = '';
+      document.getElementById('saudaraContainer').innerHTML = '';
+      anakCount = 0;
+      saudaraCount = 0;
+      
+      updateStats();
+    } else {
+      showToast('❌ Gagal: ' + result.message);
+    }
+    // --- SELESAI PERBAIKAN ---
     
   } catch (error) {
     console.error('Error saving:', error);
-    showToast('❌ Gagal menyimpan data');
+    showToast('❌ Gagal menyambung ke server');
   }
 }
 
