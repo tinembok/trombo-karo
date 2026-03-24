@@ -6,7 +6,7 @@
 // ===== CONFIG =====
 const CONFIG = {
   // GANTI DENGAN URL APPS SCRIPT ANDA SETELAH DEPLOY
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxAoEOj66uv-rdoNP9QPsSdSnPP8luRmwQQ3XtwThXMjkufsoBB4RhCaZ8_yKajzCekuA/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxO9aC_pZYx2sQ1YRQbCS169ndYhnl8QtjgakipfapDMVJzLlOcCn7TsntEHpwWnEWu/exec',
   
   // Merga Silima
   MARGA_KARO: ['Ginting', 'Karo-Karo', 'Perangin-angin', 'Sembiring', 'Tarigan']
@@ -239,7 +239,12 @@ function updateSelectOptions() {
   const namaAnda = document.getElementById('namaAnda');
   const namaCari = document.getElementById('namaCari');
   
-  const options = allData.map(d => `<option value="${d.nama}">${d.nama} (${d.marga})</option>`).join('');
+  // Sekarang kita yakin kuncinya adalah 'nama' dan 'marga' (huruf kecil)
+  const options = allData.map(d => {
+    const nama = d.nama || "Tanpa Nama";
+    const marga = d.marga || "";
+    return `<option value="${nama}">${nama} (${marga})</option>`;
+  }).join('');
   
   namaAnda.innerHTML = '<option value="">Pilih nama Anda</option>' + options;
   namaCari.innerHTML = '<option value="">Pilih nama</option>' + options;
@@ -277,10 +282,9 @@ function cariKeluarga() {
     return;
   }
   
-  resultsDiv.innerHTML = filtered.map(d => `
+resultsDiv.innerHTML = filtered.map(d => `
     <div class="result-card">
-      <img src="${d.foto || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>'}" 
-           class="result-photo" alt="${d.nama}">
+      <img src="${d.fotourl || 'data:image/svg+xml,...'}" class="result-photo">
       <div class="result-info">
         <div class="result-name">${d.nama}</div>
         <span class="result-marga">${d.marga}</span>
@@ -291,7 +295,6 @@ function cariKeluarga() {
       </div>
     </div>
   `).join('');
-}
 
 // ===== HUBUNGAN FUNCTIONS =====
 function initHubunganPage() {
