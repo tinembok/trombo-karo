@@ -345,13 +345,20 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
-  // Normalisasi: pastikan kita menggunakan huruf kecil sesuai data dari database
+  // Fungsi pembantu untuk memastikan data saudara selalu menjadi Array
+  const pastikanArray = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data.map(s => s.toLowerCase());
+    if (typeof data === 'string') return data.split(',').map(s => s.trim().toLowerCase());
+    return [];
+  };
+
   const userA = {
     nama: (a.nama || "").toLowerCase(),
     marga: (a.marga || "").toLowerCase(),
     bapa: (a.bapa || "").toLowerCase(),
     nande: (a.nande || "").toLowerCase(),
-    saudara: (a.saudara || []).map(s => s.toLowerCase())
+    saudara: pastikanArray(a.saudara)
   };
   
   const userB = {
@@ -359,20 +366,20 @@ function hitungHubungan(a, b) {
     marga: (b.marga || "").toLowerCase(),
     bapa: (b.bapa || "").toLowerCase(),
     nande: (b.nande || "").toLowerCase(),
-    saudara: (b.saudara || []).map(s => s.toLowerCase())
+    saudara: pastikanArray(b.saudara)
   };
 
   // 1. Cek Senina / Turang (Satu Ayah)
   if (userA.bapa === userB.bapa && userA.bapa !== "") {
     return {
       jenis: 'Senina / Turang',
-      deskripsi: 'Saudara kandung sebapa (Satu darah/Turang)'
+      deskripsi: 'Saudara kandung sebapa'
     };
   }
 
   // 2. Cek Kali Bubu (Pihak Keluarga Ibu)
-  // Hubungan ini terjadi jika Bapa dari si B adalah Saudara dari Nande si A
-  // Atau jika si B adalah saudara laki-laki dari Nande si A
+  // Syarat: Nama si B adalah salah satu saudara laki-laki dari Nande si A
+  // ATAU Nama si B adalah Ayah dari Nande si A (Bapa Nande)
   if (userA.nande !== "" && (userB.nama === userA.nande || userB.saudara.includes(userA.nande))) {
     return {
       jenis: 'Kali Bubu',
@@ -384,15 +391,15 @@ function hitungHubungan(a, b) {
   if (userA.marga === userB.marga && userA.marga !== "") {
     return {
       jenis: 'Sembuyak / Senina',
-      deskripsi: 'Satu marga, berbeda bapa (Rakut Sitelu)'
+      deskripsi: 'Satu marga, berbeda bapa'
     };
   }
 
-  // 4. Cek Impal (Anak dari Saudara Ibu/Ayah yang berbeda jenis kelamin)
+  // 4. Cek Impal (Anak dari saudara ibu/ayah)
   if (userA.saudara.includes(userB.bapa) || userB.saudara.includes(userA.bapa)) {
     return {
       jenis: 'Impal',
-      deskripsi: 'Anak dari saudara (Keluarga dekat)'
+      deskripsi: 'Hubungan kekerabatan keluarga dekat'
     };
   }
 
