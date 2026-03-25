@@ -9,7 +9,7 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec',
   
   // Merga Silima
-  MARGA_KARO: ['Ginting', 'Karo-Karo', 'Perangin-angin', 'Sembiring', 'Tarigan']
+  MARGA_KARO: ['ginting', 'karo-karo', 'perangin-angin', 'sembiring', 'tarigan']
 };
 
 // ===== STATE =====
@@ -345,8 +345,8 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
-  // 1. Fungsi Helper Normalisasi (Penting agar "suhanta" == "Suhanta ")
-  const clean = (txt) => (txt || "").toString().toLowerCase().trim();
+  const clean = (txt) => (txt || "").toString().toLowerCase().trim().replace(/[\s-]/g, '');
+  
   const pastikanArray = (data) => {
     if (!data) return [];
     if (Array.isArray(data)) return data.map(s => clean(s));
@@ -371,44 +371,42 @@ function hitungHubungan(a, b) {
     ndehara: clean(b.ndehara)
   };
 
-  // --- LOGIKA HUBUNGAN ---
-
-  // A. SENINA (Satu Ayah)
+  // 1. SENINA / TURANG (Satu Bapa)
   if (userA.bapa === userB.bapa && userA.bapa !== "") {
     return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
   }
 
-  // B. KALI BUBU LANGSUNG (Paman / Mama)
-  // Cek jika si B adalah saudara dari Nande si A
+  // 2. KALI BUBU LANGSUNG (Mama/Paman)
+  // Cek jika si B adalah saudara laki-laki dari Nande si A
   if (userA.nande !== "" && userB.saudara.includes(userA.nande)) {
     return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) - Saudara laki-laki Nande' };
   }
 
-  // C. ANAK KALI BUBU (Januar ke Suhanta)
-  // Cari siapa orang tua si B (Januar), yaitu Pengejapen.
-  // Lalu cek apakah Pengejapen itu saudara dari Nande si A (Pengalaman).
-  if (userB.bapa !== "" && userA.nande !== "") {
-    const orangTuaB = allData.find(d => clean(d.nama) === userB.bapa);
-    if (orangTuaB && pastikanArray(orangTuaB.saudara).includes(userA.nande)) {
-      return { jenis: 'Kali Bubu (Mama)', deskripsi: 'Anak dari Kali Bubu (Sepupu/Mama)' };
-    }
+  // 3. SIPARIBANEN (Suhanta <> Masmur)
+  // Logika: Istri A dan Istri B adalah saudara kandung (Satu Bapa)
+  const dataIstriA = allData.find(d => clean(d.nama) === userA.ndehara);
+  const dataIstriB = allData.find(d => clean(d.nama) === userB.ndehara);
+  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "") {
+    return { jenis: 'Siparibanen', deskripsi: 'Istri kita adalah kakak beradik (Satu Ayah)' };
   }
 
-  // D. IMPAL / SILIH (Masmur ke Suhanta)
-  // Masmur menikah dengan Natalia. Natalia adalah saudara Januar.
-  // Jadi Masmur adalah suami dari "Anak Kali Bubu".
-  if (userB.ndehara !== "" && userA.nande !== "") {
-    // Cek apakah istri si B (Masmur) adalah anak dari Kali Bubu si A
-    const dataIstriB = allData.find(d => clean(d.nama) === userB.ndehara || clean(d.nama).includes(clean(userB.ndehara)));
-    if (dataIstriB && dataIstriB.bapa !== "") {
-      const bapakIstri = allData.find(d => clean(d.nama) === clean(dataIstriB.bapa));
-      if (bapakIstri && pastikanArray(bapakIstri.saudara).includes(userA.nande)) {
-        return { jenis: 'Impal / Silih', deskripsi: 'Suami dari anak Kali Bubu' };
-      }
-    }
+  // 4. IMPAL (Suhanta <> Januar)
+  // Logika: Si B adalah anak dari Mama (Kali Bubu) si A
+  const bapakB = allData.find(d => clean(d.nama) === userB.bapa);
+  if (bapakB && pastikanArray(bapakB.saudara).includes(userA.nande)) {
+    return { jenis: 'Impal', deskripsi: 'Anak dari Paman (Kali Bubu)' };
   }
 
-  // E. SEMBUYAK (Satu Marga)
+  // 5. KALI BUBU LINTAS GENERASI (Suhanta <> Irama)
+  // Logika: Nande si A dan Nande si B bersaudara kandung (Satu Bapa/Kakek)
+  const nandeA = allData.find(d => clean(d.nama) === userA.nande);
+  const nandeB = allData.find(d => clean(d.nama) === userB.nande);
+  if (nandeA && nandeB && nandeA.bapa === nandeB.bapa && nandeA.bapa !== "") {
+    // Karena Nande mereka bersaudara, maka si B adalah Kali Bubu (Mama) bagi si A
+    return { jenis: 'Kali Bubu', deskripsi: 'Keluarga pemberi wanita (Keturunan Paman)' };
+  }
+
+  // 6. SEMBUYAK (Satu Marga)
   if (userA.marga === userB.marga && userA.marga !== "") {
     return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
   }
