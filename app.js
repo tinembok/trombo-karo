@@ -345,68 +345,67 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
-  // Fungsi pembantu untuk memastikan data saudara selalu menjadi Array
   const pastikanArray = (data) => {
     if (!data) return [];
-    if (Array.isArray(data)) return data.map(s => s.toLowerCase());
+    if (Array.isArray(data)) return data.map(s => s.toLowerCase().trim());
     if (typeof data === 'string') return data.split(',').map(s => s.trim().toLowerCase());
     return [];
   };
 
   const userA = {
-    nama: (a.nama || "").toLowerCase(),
-    marga: (a.marga || "").toLowerCase(),
-    bapa: (a.bapa || "").toLowerCase(),
-    nande: (a.nande || "").toLowerCase(),
-    saudara: pastikanArray(a.saudara)
+    nama: (a.nama || "").toLowerCase().trim(),
+    marga: (a.marga || "").toLowerCase().trim(),
+    bapa: (a.bapa || "").toLowerCase().trim(),
+    nande: (a.nande || "").toLowerCase().trim(),
+    saudara: pastikanArray(a.saudara),
+    ndehara: (a.ndehara || "").toLowerCase().trim()
   };
   
   const userB = {
-    nama: (b.nama || "").toLowerCase(),
-    marga: (b.marga || "").toLowerCase(),
-    bapa: (b.bapa || "").toLowerCase(),
-    nande: (b.nande || "").toLowerCase(),
-    saudara: pastikanArray(b.saudara)
+    nama: (b.nama || "").toLowerCase().trim(),
+    marga: (b.marga || "").toLowerCase().trim(),
+    bapa: (b.bapa || "").toLowerCase().trim(),
+    nande: (b.nande || "").toLowerCase().trim(),
+    saudara: pastikanArray(b.saudara),
+    ndehara: (b.ndehara || "").toLowerCase().trim()
   };
 
-  // 1. Cek Senina / Turang (Satu Ayah)
+  // 1. SENINA / TURANG (Satu Bapa)
   if (userA.bapa === userB.bapa && userA.bapa !== "") {
-    return {
-      jenis: 'Senina / Turang',
-      deskripsi: 'Saudara kandung sebapa'
-    };
+    return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
   }
 
-  // 2. Cek Kali Bubu (Pihak Keluarga Ibu)
-  // Syarat: Nama si B adalah salah satu saudara laki-laki dari Nande si A
-  // ATAU Nama si B adalah Ayah dari Nande si A (Bapa Nande)
+  // 2. KALI BUBU (Level 1: Saudara Laki-laki Nande)
+  // Contoh: Pengejapen adalah Kali Bubu Suhanta karena Pengejapen adalah saudara dari Nande Suhanta (Pengalaman)
   if (userA.nande !== "" && (userB.nama === userA.nande || userB.saudara.includes(userA.nande))) {
-    return {
-      jenis: 'Kali Bubu',
-      deskripsi: 'Pihak keluarga dari Nande (Pemberi Gadis)'
-    };
+    return { jenis: 'Kali Bubu', deskripsi: 'Saudara laki-laki Nande (Paman/Mama)' };
   }
 
-  // 3. Cek Rakut Sitelu (Satu Marga)
+  // 3. ANAK KALI BUBU / MAMA (Level 2: Anak dari Kali Bubu)
+  // Contoh: Januar adalah anak dari Pengejapen (Kali Bubu Suhanta)
+  // Logika: Jika Bapa si B (Pengejapen) adalah Saudara dari Nande si A (Pengalaman)
+  const dataKaliBubuA = allData.find(d => d.nama.toLowerCase().trim() === userA.nande || pastikanArray(d.saudara).includes(userA.nande));
+  if (dataKaliBubuA && userB.bapa === dataKaliBubuA.nama) {
+    return { jenis: 'Kali Bubu (Mama)', deskripsi: 'Anak laki-laki dari Kali Bubu Nande' };
+  }
+
+  // 4. SEMBUYAK / SENINA (Satu Marga)
   if (userA.marga === userB.marga && userA.marga !== "") {
-    return {
-      jenis: 'Sembuyak / Senina',
-      deskripsi: 'Satu marga, berbeda bapa'
-    };
+    return { jenis: 'Sembuyak / Senina', deskripsi: 'Satu marga (Rakut Sitelu)' };
   }
 
-  // 4. Cek Impal (Anak dari saudara ibu/ayah)
-  if (userA.saudara.includes(userB.bapa) || userB.saudara.includes(userA.bapa)) {
-    return {
-      jenis: 'Impal',
-      deskripsi: 'Hubungan kekerabatan keluarga dekat'
-    };
+  // 5. ANAK BERU (Kebalikan Kali Bubu)
+  if (userB.nande !== "" && (userA.nama === userB.nande || userA.saudara.includes(userB.nande))) {
+    return { jenis: 'Anak Beru', deskripsi: 'Pihak yang mengambil gadis dari keluarga kita' };
   }
 
-  return {
-    jenis: 'Tutur Siwaluh',
-    deskripsi: 'Hubungan kekerabatan umum dalam adat Karo'
-  };
+  // 6. IMPAL (Menikah dengan anak Kali Bubu / Nande)
+  // Contoh: Masmur adalah Silih/Impal karena istrinya (Natalia) adalah anak Kali Bubu
+  if (userB.ndehara !== "" && (userA.saudara.includes(userB.ndehara.split(' ')[0]) || userA.nande === userB.ndehara)) {
+     return { jenis: 'Impal / Silih', deskripsi: 'Keluarga karena ikatan pernikahan' };
+  }
+
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum dalam adat Karo' };
 }
 
 function showRakutSitelu() {
