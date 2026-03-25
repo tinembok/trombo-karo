@@ -345,101 +345,94 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
-  // 1. Fungsi Helper Normalisasi Teks yang Lebih Akurat
-  // Menghapus spasi berlebih dan membuat huruf kecil tanpa menghapus karakter penting
-  const clean = (txt) => (txt || "").toString().toLowerCase().trim();
+  // 1. Fungsi Helper untuk membersihkan teks secara total
+  // Menghapus tanda hubung dan spasi ganda agar "karo-karo" == "karo karo"
+  const clean = (txt) => (txt || "").toString().toLowerCase().trim().replace(/-/g, ' ').replace(/\s+/g, ' ');
   
   const pastikanArray = (data) => {
     if (!data) return [];
     if (Array.isArray(data)) return data.map(s => clean(s));
-    // Memisahkan berdasarkan koma dan membersihkan tiap elemen
     return data.toString().split(',').map(s => clean(s));
   };
 
   const uA = {
-    nama: clean(a.nama),
-    marga: clean(a.marga),
-    bapa: clean(a.bapa),
-    nande: clean(a.nande),
-    saudara: pastikanArray(a.saudara),
-    ndehara: clean(a.ndehara)
+    nama: clean(a.nama), marga: clean(a.marga), bapa: clean(a.bapa),
+    nande: clean(a.nande), saudara: pastikanArray(a.saudara), ndehara: clean(a.ndehara)
   };
   
   const uB = {
-    nama: clean(b.nama),
-    marga: clean(b.marga),
-    bapa: clean(b.bapa),
-    nande: clean(b.nande),
-    saudara: pastikanArray(b.saudara),
-    ndehara: clean(b.ndehara)
+    nama: clean(b.nama), marga: clean(b.marga), bapa: clean(b.bapa),
+    nande: clean(b.nande), saudara: pastikanArray(b.saudara), ndehara: clean(b.ndehara)
   };
 
-  // Mencari data lengkap dari Database untuk pelacakan silsilah
+  // Data Pendukung dari Database
   const dataBapaA = allData.find(d => clean(d.nama) === uA.bapa);
   const dataNandeA = allData.find(d => clean(d.nama) === uA.nande);
   const dataBapaB = allData.find(d => clean(d.nama) === uB.bapa);
   const dataNandeB = allData.find(d => clean(d.nama) === uB.nande);
 
-  // --- HIERARKI LOGIKA HUBUNGAN ---
+  // --- LOGIKA HUBUNGAN DARAH LANGSUNG ---
 
-  // 1. CEK AYAH & ANAK (Pengejapen <> Januar) - PRIORITAS 1
-  // Mengecek apakah nama salah satu adalah nama ayah yang lain
-  if (uB.bapa !== "" && (uA.nama === uB.bapa || uA.nama.includes(uB.bapa))) {
+  // 1. AYAH & ANAK (suhanta <> lombang, januar <> pengejapen)
+  if (uB.bapa === uA.nama || (dataBapaB && clean(dataBapaB.nama) === uA.nama)) 
     return { jenis: 'Bapa / Anak', deskripsi: 'Anda adalah Ayah dari ' + b.nama };
-  }
-  if (uA.bapa !== "" && (uB.nama === uA.bapa || uB.nama.includes(uA.bapa))) {
+  if (uA.bapa === uB.nama || (dataBapaA && clean(dataBapaA.nama) === uB.nama)) 
     return { jenis: 'Anak / Bapa', deskripsi: 'Beliau adalah Ayah Anda' };
-  }
 
-  // 2. SENINA / TURANG (Satu Ayah - Suhanta <> Tarsim)
-  if (uA.bapa === uB.bapa && uA.bapa !== "") {
+  // 2. SENINA / TURANG (suhanta <> tarsim)
+  if (uA.bapa !== "" && uA.bapa === uB.bapa) 
     return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
-  }
 
-  // 3. SIPARIBANEN (Suhanta <> Masmur)
-  // Istri Suhanta (Muliati) dan Istri Masmur (Natalia) adalah anak Pengejapen
-  if (uA.ndehara !== "" && uB.ndehara !== "") {
-    const dataIstriA = allData.find(d => clean(d.nama).includes(uA.ndehara) || uA.ndehara.includes(clean(d.nama)));
-    const dataIstriB = allData.find(d => clean(d.nama).includes(uB.ndehara) || uB.ndehara.includes(clean(d.nama)));
-    if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "") {
-      return { jenis: 'Siparibanen', deskripsi: 'Istri Anda dan Istri beliau adalah kakak beradik' };
-    }
-  }
+  // 3. ERSENINA SEPEMEREN (pengejapen <> irama)
+  // Nande Pengejapen (Radu Malem) & Nande Irama (Ngunjuki) bersaudara (Satu Bapa: Kapiten)
+  if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "")
+    return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Nande masing-masing adalah kakak beradik' };
 
-  // 4. KALI BUBU LANGSUNG (Paman/Mama - Suhanta <> Pengejapen)
-  if (uA.nande !== "") {
-    if (uB.nama.includes(uA.nande) || uB.saudara.some(s => s.includes(uA.nande) || uA.nande.includes(s))) {
-      return { jenis: 'Kali Bubu (Mama)', deskripsi: 'Paman - Saudara laki-laki Nande' };
-    }
-  }
+  // --- LOGIKA HUBUNGAN PERNIKAHAN (SILIH/KELA/SIPARIBANEN) ---
 
-  // 5. IMPAL (Suhanta <> Januar)
-  // Januar adalah anak dari Pengejapen (Pengejapen adalah Kali Bubu Suhanta)
-  if (dataBapaB) {
-    const saudaraBapaB = pastikanArray(dataBapaB.saudara);
-    if (saudaraBapaB.some(s => s.includes(uA.nande) || uA.nande.includes(s))) {
-      return { jenis: 'Impal', deskripsi: 'Anak dari Paman (Kali Bubu)' };
-    }
-  }
+  // 4. SILIH (pengejapen <> lombang)
+  // Istri Lombang (Pengalaman) adalah saudara Pengejapen
+  if (uB.ndehara !== "" && uA.saudara.includes(uB.ndehara))
+    return { jenis: 'Silih', deskripsi: 'Suami dari saudara perempuan Anda' };
+  if (uA.ndehara !== "" && uB.saudara.includes(uA.ndehara))
+    return { jenis: 'Silih', deskripsi: 'Anda adalah suami dari saudara perempuan beliau' };
 
-  // 6. ERSENINA SEPEMEREN (Pengejapen <> Irama)
-  // Nande Pengejapen (Radu Malem) & Nande Irama (Ngunjuki) adalah bersaudara
-  if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "") {
-    return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau bersaudara' };
-  }
+  // 5. SIPARIBANEN (suhanta <> masmur)
+  // Istri Suhanta (Muliati) & Istri Masmur (Natalia) bersaudara (Satu Bapa: Pengejapen)
+  const dataIstriA = allData.find(d => clean(d.nama) === uA.ndehara);
+  const dataIstriB = allData.find(d => clean(d.nama) === uB.ndehara);
+  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "")
+    return { jenis: 'Siparibanen', deskripsi: 'Istri masing-masing adalah kakak beradik' };
 
-  // 7. KALI BUBU / LAKI (Suhanta <> Kapiten)
-  // Mencari kakek dari garis ibu
-  if (dataNandeA && dataNandeA.bapa === uB.nama) {
-    return { jenis: 'Laki (Kakek)', deskripsi: 'Kakek - Ayah dari Nande Anda' };
-  }
+  // 6. KELA / MENANTU (pengejapen <> masmur)
+  // Masmur menikah dengan Natalia (Anak Pengejapen)
+  if (uB.ndehara !== "" && (pastikanArray(a.anak).includes(uB.ndehara) || uB.ndehara.includes(uA.nama)))
+    return { jenis: 'Kela (Menantu)', deskripsi: 'Beliau adalah suami dari anak Anda' };
 
-  // 8. SEMBUYAK (Satu Marga)
-  if (uA.marga === uB.marga && uA.marga !== "") {
+  // --- LOGIKA KALI BUBU & BERE-BERE ---
+
+  // 7. KALI BUBU / LAKI (suhanta <> kapiten)
+  if (dataNandeA && dataNandeA.bapa === uB.nama)
+    return { jenis: 'Laki (Kakek)', deskripsi: 'Ayah dari Nande Anda' };
+
+  // 8. BERE-BERE (pengejapen <> suhanta)
+  // Suhanta adalah anak dari Pengalaman (Saudara Pengejapen)
+  if (uB.nande !== "" && uA.saudara.includes(uB.nande))
+    return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda' };
+
+  // 9. KALI BUBU (suhanta <> irama / pengejapen)
+  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
+    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) dari pihak Nande' };
+
+  // 10. IMPAL (suhanta <> januar)
+  if (dataBapaB && dataBapaB.saudara.includes(uA.nande))
+    return { jenis: 'Impal', deskripsi: 'Anak dari Mama (Kali Bubu)' };
+
+  // 11. SEMBUYAK (Satu Marga)
+  if (uA.marga === uB.marga && uA.marga !== "")
     return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
-  }
 
-  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum adat Karo' };
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
 }
 
 function showRakutSitelu() {
