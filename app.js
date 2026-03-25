@@ -345,67 +345,75 @@ function cekHubungan() {
 }
 
 function hitungHubungan(a, b) {
+  // 1. Fungsi Helper Normalisasi (Penting agar "suhanta" == "Suhanta ")
+  const clean = (txt) => (txt || "").toString().toLowerCase().trim();
   const pastikanArray = (data) => {
     if (!data) return [];
-    if (Array.isArray(data)) return data.map(s => s.toLowerCase().trim());
-    if (typeof data === 'string') return data.split(',').map(s => s.trim().toLowerCase());
-    return [];
+    if (Array.isArray(data)) return data.map(s => clean(s));
+    return data.toString().split(',').map(s => clean(s));
   };
 
   const userA = {
-    nama: (a.nama || "").toLowerCase().trim(),
-    marga: (a.marga || "").toLowerCase().trim(),
-    bapa: (a.bapa || "").toLowerCase().trim(),
-    nande: (a.nande || "").toLowerCase().trim(),
+    nama: clean(a.nama),
+    marga: clean(a.marga),
+    bapa: clean(a.bapa),
+    nande: clean(a.nande),
     saudara: pastikanArray(a.saudara),
-    ndehara: (a.ndehara || "").toLowerCase().trim()
+    ndehara: clean(a.ndehara)
   };
   
   const userB = {
-    nama: (b.nama || "").toLowerCase().trim(),
-    marga: (b.marga || "").toLowerCase().trim(),
-    bapa: (b.bapa || "").toLowerCase().trim(),
-    nande: (b.nande || "").toLowerCase().trim(),
+    nama: clean(b.nama),
+    marga: clean(b.marga),
+    bapa: clean(b.bapa),
+    nande: clean(b.nande),
     saudara: pastikanArray(b.saudara),
-    ndehara: (b.ndehara || "").toLowerCase().trim()
+    ndehara: clean(b.ndehara)
   };
 
-  // 1. SENINA / TURANG (Satu Bapa)
+  // --- LOGIKA HUBUNGAN ---
+
+  // A. SENINA (Satu Ayah)
   if (userA.bapa === userB.bapa && userA.bapa !== "") {
     return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
   }
 
-  // 2. KALI BUBU (Level 1: Saudara Laki-laki Nande)
-  // Contoh: Pengejapen adalah Kali Bubu Suhanta karena Pengejapen adalah saudara dari Nande Suhanta (Pengalaman)
-  if (userA.nande !== "" && (userB.nama === userA.nande || userB.saudara.includes(userA.nande))) {
-    return { jenis: 'Kali Bubu', deskripsi: 'Saudara laki-laki Nande (Paman/Mama)' };
+  // B. KALI BUBU LANGSUNG (Paman / Mama)
+  // Cek jika si B adalah saudara dari Nande si A
+  if (userA.nande !== "" && userB.saudara.includes(userA.nande)) {
+    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) - Saudara laki-laki Nande' };
   }
 
-  // 3. ANAK KALI BUBU / MAMA (Level 2: Anak dari Kali Bubu)
-  // Contoh: Januar adalah anak dari Pengejapen (Kali Bubu Suhanta)
-  // Logika: Jika Bapa si B (Pengejapen) adalah Saudara dari Nande si A (Pengalaman)
-  const dataKaliBubuA = allData.find(d => d.nama.toLowerCase().trim() === userA.nande || pastikanArray(d.saudara).includes(userA.nande));
-  if (dataKaliBubuA && userB.bapa === dataKaliBubuA.nama) {
-    return { jenis: 'Kali Bubu (Mama)', deskripsi: 'Anak laki-laki dari Kali Bubu Nande' };
+  // C. ANAK KALI BUBU (Januar ke Suhanta)
+  // Cari siapa orang tua si B (Januar), yaitu Pengejapen.
+  // Lalu cek apakah Pengejapen itu saudara dari Nande si A (Pengalaman).
+  if (userB.bapa !== "" && userA.nande !== "") {
+    const orangTuaB = allData.find(d => clean(d.nama) === userB.bapa);
+    if (orangTuaB && pastikanArray(orangTuaB.saudara).includes(userA.nande)) {
+      return { jenis: 'Kali Bubu (Mama)', deskripsi: 'Anak dari Kali Bubu (Sepupu/Mama)' };
+    }
   }
 
-  // 4. SEMBUYAK / SENINA (Satu Marga)
+  // D. IMPAL / SILIH (Masmur ke Suhanta)
+  // Masmur menikah dengan Natalia. Natalia adalah saudara Januar.
+  // Jadi Masmur adalah suami dari "Anak Kali Bubu".
+  if (userB.ndehara !== "" && userA.nande !== "") {
+    // Cek apakah istri si B (Masmur) adalah anak dari Kali Bubu si A
+    const dataIstriB = allData.find(d => clean(d.nama) === userB.ndehara || clean(d.nama).includes(clean(userB.ndehara)));
+    if (dataIstriB && dataIstriB.bapa !== "") {
+      const bapakIstri = allData.find(d => clean(d.nama) === clean(dataIstriB.bapa));
+      if (bapakIstri && pastikanArray(bapakIstri.saudara).includes(userA.nande)) {
+        return { jenis: 'Impal / Silih', deskripsi: 'Suami dari anak Kali Bubu' };
+      }
+    }
+  }
+
+  // E. SEMBUYAK (Satu Marga)
   if (userA.marga === userB.marga && userA.marga !== "") {
-    return { jenis: 'Sembuyak / Senina', deskripsi: 'Satu marga (Rakut Sitelu)' };
+    return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
   }
 
-  // 5. ANAK BERU (Kebalikan Kali Bubu)
-  if (userB.nande !== "" && (userA.nama === userB.nande || userA.saudara.includes(userB.nande))) {
-    return { jenis: 'Anak Beru', deskripsi: 'Pihak yang mengambil gadis dari keluarga kita' };
-  }
-
-  // 6. IMPAL (Menikah dengan anak Kali Bubu / Nande)
-  // Contoh: Masmur adalah Silih/Impal karena istrinya (Natalia) adalah anak Kali Bubu
-  if (userB.ndehara !== "" && (userA.saudara.includes(userB.ndehara.split(' ')[0]) || userA.nande === userB.ndehara)) {
-     return { jenis: 'Impal / Silih', deskripsi: 'Keluarga karena ikatan pernikahan' };
-  }
-
-  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum dalam adat Karo' };
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
 }
 
 function showRakutSitelu() {
