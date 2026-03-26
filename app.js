@@ -446,6 +446,7 @@ function hitungHubungan(a, b) {
   // 11. SEMBUYAK (Satu Marga)
   if (uA.marga === uB.marga && uA.marga !== "")
     return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
+  }
 
   return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
 }
