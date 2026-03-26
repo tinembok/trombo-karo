@@ -9,7 +9,7 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec',
   
   // Merga Silima
-  MARGA_KARO: ['ginting', 'karo-karo', 'perangin-angin', 'sembiring', 'tarigan']
+  MARGA_KARO: ['ginting', 'karo karo', 'perangin angin', 'sembiring', 'tarigan']
 };
 
 // ===== STATE =====
@@ -39,6 +39,16 @@ async function init() {
   // Update stats
   updateStats();
 }
+
+// 1. FUNGSI NORMALISASI (SOLUSI MASALAH HURUF/SPASI)
+const superClean = (txt) => {
+  if (!txt) return "";
+  return txt.toString()
+    .toLowerCase()
+    .replace(/[-]/g, ' ')      // "karo-karo" -> "karo karo"
+    .replace(/\s+/g, ' ')      // Spasi ganda -> satu spasi
+    .trim();                   // Hapus spasi di ujung
+};
 
 function setupEventListeners() {
   // Form input
@@ -81,29 +91,21 @@ function showPage(pageName) {
 // ===== DATA MANAGEMENT =====
 async function loadData() {
   try {
-    showToast('Memuat data...');
-    
-    // Melakukan fetch data asli dari Google Apps Script
-    // Kita menambahkan parameter action=getAll agar doPost di Code.gs tahu apa yang harus dilakukan
     const response = await fetch(CONFIG.SCRIPT_URL + '?action=getAll');
     const result = await response.json();
-    
     if (result.success) {
-      allData = result.data; // Mengisi variabel allData dengan data asli dari Sheet
-      console.log('Data berhasil dimuat:', allData);
-    } else {
-      showToast('Gagal: ' + result.message);
+      // Normalisasi semua data saat pertama kali dimuat
+      allData = result.data.map(item => {
+        let newItem = {};
+        for (let key in item) {
+          newItem[key.toLowerCase()] = item[key];
+        }
+        return newItem;
+      });
+      console.log('Data berhasil dimuat & dinormalisasi:', allData);
     }
-    
-    updateStats();
-    updateSelectOptions();
-    
   } catch (error) {
-    console.error('Error loading data:', error);
-    showToast('Gagal menyambung ke database');
-    
-    // Data dummy hanya sebagai fallback jika server error
-    allData = []; 
+    console.error('Gagal memuat data:', error);
   }
 }
 
@@ -344,32 +346,41 @@ function cekHubungan() {
   hasilDiv.classList.add('show');
 }
 
+// FUNGSI NORMALISASI (SOLUSI MASALAH HURUF/SPASI)
 function hitungHubungan(a, b) {
-  // 1. Fungsi Helper untuk membersihkan teks secara total
-  // Menghapus tanda hubung dan spasi ganda agar "karo-karo" == "karo karo"
-  const clean = (txt) => (txt || "").toString().toLowerCase().trim().replace(/-/g, ' ').replace(/\s+/g, ' ');
+  // Fungsi Super Clean: Kecilkan semua, buang spasi ganda, buang tanda hubung
+  const clean = (txt) => {
+    return (txt || "")
+      .toString()
+      .toLowerCase()
+      .replace(/[-]/g, ' ') // Ganti tanda minus jadi spasi
+      .replace(/\s+/g, ' ') // Ganti spasi ganda jadi satu spasi
+      .trim();              // Buang spasi di awal/akhir
+  };
   
   const pastikanArray = (data) => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data.map(s => clean(s));
-    return data.toString().split(',').map(s => clean(s));
-  };
+  if (!data) return [];
+  let str = Array.isArray(data) ? data.join(',') : data.toString();
+  return str.split(',').map(s => superClean(s)).filter(s => s !== "");
+};
 
+//  FUNGSI UTAMA HITUNG HUBUNGAN
+function hitungHubungan(a, b) {
   const uA = {
-    nama: clean(a.nama), marga: clean(a.marga), bapa: clean(a.bapa),
-    nande: clean(a.nande), saudara: pastikanArray(a.saudara), ndehara: clean(a.ndehara)
+    nama: superClean(a.nama), marga: superClean(a.marga), bapa: superClean(a.bapa),
+    nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara)
   };
   
   const uB = {
-    nama: clean(b.nama), marga: clean(b.marga), bapa: clean(b.bapa),
-    nande: clean(b.nande), saudara: pastikanArray(b.saudara), ndehara: clean(b.ndehara)
+    nama: superClean(b.nama), marga: superClean(b.marga), bapa: superClean(b.bapa),
+    nande: superClean(b.nande), saudara: pastikanArray(b.saudara), ndehara: superClean(b.ndehara)
   };
 
-  // Data Pendukung dari Database
-  const dataBapaA = allData.find(d => clean(d.nama) === uA.bapa);
-  const dataNandeA = allData.find(d => clean(d.nama) === uA.nande);
-  const dataBapaB = allData.find(d => clean(d.nama) === uB.bapa);
-  const dataNandeB = allData.find(d => clean(d.nama) === uB.nande);
+  // Data Orang Tua dari Database (untuk pelacakan 3 generasi)
+  const dataBapaA = allData.find(d => superClean(d.nama) === uA.bapa);
+  const dataNandeA = allData.find(d => superClean(d.nama) === uA.nande);
+  const dataBapaB = allData.find(d => superClean(d.nama) === uB.bapa);
+  const dataNandeB = allData.find(d => superClean(d.nama) === uB.nande);
 
   // --- LOGIKA HUBUNGAN DARAH LANGSUNG ---
 
@@ -387,6 +398,10 @@ function hitungHubungan(a, b) {
   // Nande Pengejapen (Radu Malem) & Nande Irama (Ngunjuki) bersaudara (Satu Bapa: Kapiten)
   if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "")
     return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Nande masing-masing adalah kakak beradik' };
+    
+    // KALI BUBU LANGSUNG (Paman / Mama)
+  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
+    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) - Saudara laki-laki Nande' };
 
   // --- LOGIKA HUBUNGAN PERNIKAHAN (SILIH/KELA/SIPARIBANEN) ---
 
