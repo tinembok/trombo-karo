@@ -13,98 +13,157 @@ const CONFIG = {
 };
 
 // ===== STATE =====
-let currentPage = 'home';
+let allData = [];
 let fotoBase64 = null;
 let anakCount = 0;
 let saudaraCount = 0;
-let allData = [];
 
-// ===== INIT =====
+// ===== 1. FUNGSI UTAMA (GLOBAL SCOPE) =====
+// Pastikan fungsi ini berada paling atas agar bisa diakses oleh semua fungsi lain
+const superClean = (txt) => {
+  if (!txt) return "";
+  return txt.toString()
+    .toLowerCase()
+    .replace(/[-]/g, ' ')      // "karo-karo" -> "karo karo"
+    .replace(/\s+/g, ' ')      // Spasi ganda -> satu spasi
+    .trim();                   // Hapus spasi di ujung
+};
+
+const pastikanArray = (data) => {
+  if (!data) return [];
+  let str = Array.isArray(data) ? data.join(',') : data.toString();
+  return str.split(',').map(s => superClean(s)).filter(s => s !== "");
+};
+
+// ===== 2. INIT & EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
   init();
 });
 
 async function init() {
-  // Hide loading after 1s
-  setTimeout(() => {
-    document.getElementById('loading').style.display = 'none';
-  }, 1000);
+  const loader = document.getElementById('loading');
+  if (loader) setTimeout(() => loader.style.display = 'none', 1000);
   
-  // Load data
   await loadData();
-  
-  // Setup event listeners
   setupEventListeners();
-  
-  // Update stats
   updateStats();
 }
 
 function setupEventListeners() {
-  // Form input
-  document.getElementById('formInput').addEventListener('submit', handleSubmit);
+  const form = document.getElementById('formInput');
+  if (form) form.addEventListener('submit', handleSubmit);
   
-  // Foto input
-  document.getElementById('fotoInput').addEventListener('change', handleFoto);
-  
-  // Photo preview click
-  document.getElementById('photoPreview').addEventListener('click', () => {
-    document.getElementById('fotoInput').click();
-  });
+  const fotoIn = document.getElementById('fotoInput');
+  if (fotoIn) fotoIn.addEventListener('change', handleFoto);
 }
 
-// ===== NAVIGATION =====
-function showPage(pageName) {
-  // Update nav buttons
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.closest('.nav-btn').classList.add('active');
-  
-  // Hide all pages
-  document.querySelectorAll('.page').forEach(page => {
-    page.classList.remove('active');
-  });
-  
-  // Show selected page
-  document.getElementById(`page-${pageName}`).classList.add('active');
-  currentPage = pageName;
-  
-  // Page specific init
-  if (pageName === 'hubungan') {
-    initHubunganPage();
-  } else if (pageName === 'kamera') {
-    initKamera();
-  }
-}
-
-// ===== DATA MANAGEMENT =====
+// ===== 3. DATA MANAGEMENT =====
 async function loadData() {
   try {
-    showToast('Memuat data...');
-    
-    // Melakukan fetch data asli dari Google Apps Script
-    // Kita menambahkan parameter action=getAll agar doPost di Code.gs tahu apa yang harus dilakukan
     const response = await fetch(CONFIG.SCRIPT_URL + '?action=getAll');
     const result = await response.json();
-    
     if (result.success) {
-      allData = result.data; // Mengisi variabel allData dengan data asli dari Sheet
-      console.log('Data berhasil dimuat:', allData);
-    } else {
-      showToast('Gagal: ' + result.message);
+      allData = result.data.map(item => {
+        let newItem = {};
+        for (let key in item) {
+          newItem[key.toLowerCase()] = item[key];
+        }
+        return newItem;
+      });
+      console.log('Data dimuat:', allData);
     }
-    
-    updateStats();
-    updateSelectOptions();
-    
   } catch (error) {
-    console.error('Error loading data:', error);
-    showToast('Gagal menyambung ke database');
-    
-    // Data dummy hanya sebagai fallback jika server error
-    allData = []; 
+    console.error('Gagal load data:', error);
   }
+}
+
+// ===== 4. LOGIKA HUBUNGAN (TROMBO) =====
+function hitungHubungan(a, b) {
+  const uA = {
+    nama: superClean(a.nama), marga: superClean(a.marga), bapa: superClean(a.bapa),
+    nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara),
+    anak: pastikanArray(a.anak)
+  };
+  
+  const uB = {
+    nama: superClean(b.nama), marga: superClean(b.marga), bapa: superClean(b.bapa),
+    nande: superClean(b.nande), saudara: pastikanArray(b.saudara), ndehara: superClean(b.ndehara),
+    anak: pastikanArray(b.anak)
+  };
+
+  const dataBapaA = allData.find(d => superClean(d.nama) === uA.bapa);
+  const dataNandeA = allData.find(d => superClean(d.nama) === uA.nande);
+  const dataBapaB = allData.find(d => superClean(d.nama) === uB.bapa);
+  const dataNandeB = allData.find(d => superClean(d.nama) === uB.nande);
+
+  // LOGIKA AYAH & ANAK
+  if (uB.bapa === uA.nama || uA.anak.includes(uB.nama)) 
+    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah dari ${b.nama}` };
+  if (uA.bapa === uB.nama || uB.anak.includes(uA.nama)) 
+    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Ayah Anda` };
+
+  // LOGIKA SENINA / TURANG
+  if (uA.bapa !== "" && uA.bapa === uB.bapa) 
+    return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
+
+  // LOGIKA SIPARIBANEN
+  const istriA = allData.find(d => superClean(d.nama) === uA.ndehara);
+  const istriB = allData.find(d => superClean(d.nama) === uB.ndehara);
+  if (istriA && istriB && istriA.bapa === istriB.bapa && istriA.bapa !== "")
+    return { jenis: 'Siparibanen', deskripsi: 'Istri masing-masing adalah kakak beradik' };
+
+  // LOGIKA KALI BUBU & BERE-BERE
+  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
+    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) dari pihak Nande' };
+  
+  if (uB.nande !== "" && uA.saudara.includes(uB.nande))
+    return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda' };
+
+  // LOGIKA SEMBUYAK
+  if (uA.marga === uB.marga && uA.marga !== "")
+    return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Satu keturunan)' };
+
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
+}
+
+// ===== 5. UI FUNCTIONS =====
+function updateSelectOptions() {
+  const options = allData.map(d => `<option value="${d.nama}">${d.nama} (${d.marga})</option>`).join('');
+  const selA = document.getElementById('namaAnda');
+  const selB = document.getElementById('namaCari');
+  if(selA) selA.innerHTML = '<option value="">Pilih nama Anda</option>' + options;
+  if(selB) selB.innerHTML = '<option value="">Pilih nama</option>' + options;
+}
+
+function cekHubungan() {
+  const namaAnda = document.getElementById('namaAnda').value;
+  const namaCari = document.getElementById('namaCari').value;
+  
+  if (!namaAnda || !namaCari) return alert('Pilih nama dulu');
+  
+  const dataA = allData.find(d => d.nama === namaAnda);
+  const dataB = allData.find(d => d.nama === namaCari);
+  
+  const hasil = hitungHubungan(dataA, dataB);
+  const resDiv = document.getElementById('hasilHubungan');
+  
+  resDiv.innerHTML = `<h3>${hasil.jenis}</h3><p>${hasil.deskripsi}</p>`;
+  resDiv.classList.add('show');
+}
+
+function updateStats() {
+  const el = document.getElementById('totalKeluarga');
+  if(el) el.textContent = allData.length;
+}
+
+function initHubunganPage() {
+  updateSelectOptions();
+}
+
+function showPage(pageName) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${pageName}`).classList.add('active');
+  if(pageName === 'hubungan') initHubunganPage();
 }
 
 async function saveData(data) {
@@ -230,26 +289,6 @@ async function handleSubmit(e) {
   await saveData(data);
 }
 
-// ===== STATS & UI =====
-function updateStats() {
-  document.getElementById('totalKeluarga').textContent = allData.length;
-}
-
-function updateSelectOptions() {
-  const namaAnda = document.getElementById('namaAnda');
-  const namaCari = document.getElementById('namaCari');
-  
-  // Sekarang kita yakin kuncinya adalah 'nama' dan 'marga' (huruf kecil)
-  const options = allData.map(d => {
-    const nama = d.nama || "Tanpa Nama";
-    const marga = d.marga || "";
-    return `<option value="${nama}">${nama} (${marga})</option>`;
-  }).join('');
-  
-  namaAnda.innerHTML = '<option value="">Pilih nama Anda</option>' + options;
-  namaCari.innerHTML = '<option value="">Pilih nama</option>' + options;
-}
-
 function showToast(message) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -296,114 +335,7 @@ resultsDiv.innerHTML = filtered.map(d => `
     </div>
   `).join('');
 }
-// ===== HUBUNGAN FUNCTIONS =====
-function initHubunganPage() {
-  updateSelectOptions();
-}
 
-function cekHubungan() {
-  const namaAnda = document.getElementById('namaAnda').value;
-  const namaCari = document.getElementById('namaCari').value;
-  const hasilDiv = document.getElementById('hasilHubungan');
-  
-  if (!namaAnda || !namaCari) {
-    showToast('Pilih kedua nama terlebih dahulu');
-    return;
-  }
-  
-  if (namaAnda === namaCari) {
-    showToast('Pilih dua nama yang berbeda');
-    return;
-  }
-  
-  const dataAnda = allData.find(d => d.nama === namaAnda);
-  const dataCari = allData.find(d => d.nama === namaCari);
-  
-  const hubungan = hitungHubungan(dataAnda, dataCari);
-  
-  hasilDiv.innerHTML = `
-    <div class="hubungan-title">
-      <h3>${hubungan.jenis}</h3>
-      <p>${hubungan.deskripsi}</p>
-    </div>
-    <div style="display: flex; gap: 15px; justify-content: center;">
-      <div style="text-align: center;">
-        <div style="font-size: 3rem;">👤</div>
-        <div style="font-weight: 600;">${dataAnda.nama}</div>
-        <div style="font-size: 0.8rem; color: #666;">Anda</div>
-      </div>
-      <div style="display: flex; align-items: center; font-size: 1.5rem;">↔️</div>
-      <div style="text-align: center;">
-        <div style="font-size: 3rem;">👤</div>
-        <div style="font-weight: 600;">${dataCari.nama}</div>
-        <div style="font-size: 0.8rem; color: #666;">${dataCari.marga}</div>
-      </div>
-    </div>
-  `;
-  
-  hasilDiv.classList.add('show');
-}
-
-function hitungHubungan(a, b) {
-  const clean = (txt) => (txt || "").toString().toLowerCase().trim().replace(/[\s-]/g, '');
-  
-  const pastikanArray = (data) => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data.map(s => clean(s));
-    return data.toString().split(',').map(s => clean(s));
-  };
-
-const uA = {
-    nama: superClean(a.nama), marga: superClean(a.marga), bapa: superClean(a.bapa),
-    nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara),
-    anak: pastikanArray(a.anak)
-  };
-  
-  const uB = {
-    nama: superClean(b.nama), marga: superClean(b.marga), bapa: superClean(b.bapa),
-    nande: superClean(b.nande), saudara: pastikanArray(b.saudara), ndehara: superClean(b.ndehara),
-    anak: pastikanArray(b.anak)
-  };
-
-  const dataBapaA = allData.find(d => superClean(d.nama) === uA.bapa);
-  const dataNandeA = allData.find(d => superClean(d.nama) === uA.nande);
-  const dataBapaB = allData.find(d => superClean(d.nama) === uB.bapa);
-  const dataNandeB = allData.find(d => superClean(d.nama) === uB.nande);
-
-  // --- LOGIKA PRIORITAS 1: HUBUNGAN DARAH LANGSUNG ---
-  if (uB.bapa === uA.nama || uA.anak.includes(uB.nama)) 
-    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah/Orang tua dari ${b.nama}` };
-  if (uA.bapa === uB.nama || uB.anak.includes(uA.nama)) 
-    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Ayah/Orang tua Anda` };
-
-  // --- LOGIKA PRIORITAS 2: PERSAUDARAAN & PERNIKAHAN ---
-  if (uA.bapa !== "" && uA.bapa === uB.bapa) 
-    return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
-
-  if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "")
-    return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah kakak beradik' };
-
-  const dataIstriA = allData.find(d => superClean(d.nama) === uA.ndehara);
-  const dataIstriB = allData.find(d => superClean(d.nama) === uB.ndehara);
-  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "")
-    return { jenis: 'Siparibanen', deskripsi: 'Istri Anda dan istri beliau adalah kakak beradik' };
-
-  // --- LOGIKA PRIORITAS 3: KALI BUBU, BERE-BERE & IMPAL ---
-  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
-    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) - Saudara laki-laki Nande' };
-
-  if (uB.nande !== "" && uA.saudara.includes(uB.nande))
-    return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda' };
-
-  if (dataBapaB && dataBapaB.saudara.includes(uA.nande))
-    return { jenis: 'Impal', deskripsi: 'Anak dari Mama (Kali Bubu)' };
-
-  // --- LOGIKA PRIORITAS 4: MARGA ---
-  if (uA.marga === uB.marga && uA.marga !== "")
-    return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
-
-  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
-}
 
 function showRakutSitelu() {
   showToast('Menampilkan Rakut Sitelu...');
