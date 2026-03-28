@@ -9,7 +9,7 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec',
   
   // Merga Silima
-  MARGA_KARO: ['ginting', 'karo karo', 'perangin angin', 'sembiring', 'tarigan']
+  MARGA_KARO: ['ginting', 'karo-karo', 'perangin-angin', 'sembiring', 'tarigan']
 };
 
 // ===== STATE =====
@@ -39,16 +39,6 @@ async function init() {
   // Update stats
   updateStats();
 }
-
-// 1. FUNGSI NORMALISASI (SOLUSI MASALAH HURUF/SPASI)
-const superClean = (txt) => {
-  if (!txt) return "";
-  return txt.toString()
-    .toLowerCase()
-    .replace(/[-]/g, ' ')      // "karo-karo" -> "karo karo"
-    .replace(/\s+/g, ' ')      // Spasi ganda -> satu spasi
-    .trim();                   // Hapus spasi di ujung
-};
 
 function setupEventListeners() {
   // Form input
@@ -91,21 +81,29 @@ function showPage(pageName) {
 // ===== DATA MANAGEMENT =====
 async function loadData() {
   try {
+    showToast('Memuat data...');
+    
+    // Melakukan fetch data asli dari Google Apps Script
+    // Kita menambahkan parameter action=getAll agar doPost di Code.gs tahu apa yang harus dilakukan
     const response = await fetch(CONFIG.SCRIPT_URL + '?action=getAll');
     const result = await response.json();
+    
     if (result.success) {
-      // Normalisasi semua data saat pertama kali dimuat
-      allData = result.data.map(item => {
-        let newItem = {};
-        for (let key in item) {
-          newItem[key.toLowerCase()] = item[key];
-        }
-        return newItem;
-      });
-      console.log('Data berhasil dimuat & dinormalisasi:', allData);
+      allData = result.data; // Mengisi variabel allData dengan data asli dari Sheet
+      console.log('Data berhasil dimuat:', allData);
+    } else {
+      showToast('Gagal: ' + result.message);
     }
+    
+    updateStats();
+    updateSelectOptions();
+    
   } catch (error) {
-    console.error('Gagal memuat data:', error);
+    console.error('Error loading data:', error);
+    showToast('Gagal menyambung ke database');
+    
+    // Data dummy hanya sebagai fallback jika server error
+    allData = []; 
   }
 }
 
@@ -175,6 +173,91 @@ function tambahSaudara() {
 function hapusSaudara(btn) {
   btn.parentElement.remove();
   saudaraCount--;
+}
+
+function handleFoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    fotoBase64 = event.target.result;
+    updatePhotoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePhotoPreview() {
+  const preview = document.getElementById('photoPreview');
+  
+  if (fotoBase64) {
+    preview.innerHTML = `<img src="${fotoBase64}" alt="Foto">`;
+    preview.classList.add('has-image');
+  } else {
+    preview.innerHTML = `
+      <span>📷</span>
+      <small>Klik untuk ambil foto</small>
+    `;
+    preview.classList.remove('has-image');
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  
+  // Collect anak
+  const anakInputs = document.querySelectorAll('input[name="anak[]"]');
+  const anak = Array.from(anakInputs).map(input => input.value).filter(v => v);
+  
+  // Collect saudara
+  const saudaraInputs = document.querySelectorAll('input[name="saudara[]"]');
+  const saudara = Array.from(saudaraInputs).map(input => input.value).filter(v => v);
+  
+  const data = {
+    nama: document.getElementById('nama').value,
+    marga: document.getElementById('marga').value,
+    ndehara: document.getElementById('ndehara').value,
+    anak: anak,
+    bapa: document.getElementById('bapa').value,
+    nande: document.getElementById('nande').value,
+    saudara: saudara,
+    alamat: document.getElementById('alamat').value,
+    nowa: document.getElementById('nowa').value,
+    foto: fotoBase64,
+    timestamp: new Date().toISOString()
+  };
+  
+  await saveData(data);
+}
+
+// ===== STATS & UI =====
+function updateStats() {
+  document.getElementById('totalKeluarga').textContent = allData.length;
+}
+
+function updateSelectOptions() {
+  const namaAnda = document.getElementById('namaAnda');
+  const namaCari = document.getElementById('namaCari');
+  
+  // Sekarang kita yakin kuncinya adalah 'nama' dan 'marga' (huruf kecil)
+  const options = allData.map(d => {
+    const nama = d.nama || "Tanpa Nama";
+    const marga = d.marga || "";
+    return `<option value="${nama}">${nama} (${marga})</option>`;
+  }).join('');
+  
+  namaAnda.innerHTML = '<option value="">Pilih nama Anda</option>' + options;
+  namaCari.innerHTML = '<option value="">Pilih nama</option>' + options;
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
 }
 
 // ===== SEARCH =====
@@ -261,102 +344,61 @@ function cekHubungan() {
   hasilDiv.classList.add('show');
 }
 
-// FUNGSI NORMALISASI (SOLUSI MASALAH HURUF/SPASI)
 function hitungHubungan(a, b) {
-  // Fungsi Super Clean: Kecilkan semua, buang spasi ganda, buang tanda hubung
-  const clean = (txt) => {
-    return (txt || "")
-      .toString()
-      .toLowerCase()
-      .replace(/[-]/g, ' ') // Ganti tanda minus jadi spasi
-      .replace(/\s+/g, ' ') // Ganti spasi ganda jadi satu spasi
-      .trim();              // Buang spasi di awal/akhir
-  };
+  const clean = (txt) => (txt || "").toString().toLowerCase().trim().replace(/[\s-]/g, '');
   
   const pastikanArray = (data) => {
-  if (!data) return [];
-  let str = Array.isArray(data) ? data.join(',') : data.toString();
-  return str.split(',').map(s => superClean(s)).filter(s => s !== "");
-};
+    if (!data) return [];
+    if (Array.isArray(data)) return data.map(s => clean(s));
+    return data.toString().split(',').map(s => clean(s));
+  };
 
-  const uA = {
+const uA = {
     nama: superClean(a.nama), marga: superClean(a.marga), bapa: superClean(a.bapa),
-    nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara)
+    nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara),
+    anak: pastikanArray(a.anak)
   };
   
   const uB = {
     nama: superClean(b.nama), marga: superClean(b.marga), bapa: superClean(b.bapa),
-    nande: superClean(b.nande), saudara: pastikanArray(b.saudara), ndehara: superClean(b.ndehara)
+    nande: superClean(b.nande), saudara: pastikanArray(b.saudara), ndehara: superClean(b.ndehara),
+    anak: pastikanArray(b.anak)
   };
 
-  // Data Orang Tua dari Database (untuk pelacakan 3 generasi)
   const dataBapaA = allData.find(d => superClean(d.nama) === uA.bapa);
   const dataNandeA = allData.find(d => superClean(d.nama) === uA.nande);
   const dataBapaB = allData.find(d => superClean(d.nama) === uB.bapa);
   const dataNandeB = allData.find(d => superClean(d.nama) === uB.nande);
 
-  // --- LOGIKA HUBUNGAN DARAH LANGSUNG ---
+  // --- LOGIKA PRIORITAS 1: HUBUNGAN DARAH LANGSUNG ---
+  if (uB.bapa === uA.nama || uA.anak.includes(uB.nama)) 
+    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah/Orang tua dari ${b.nama}` };
+  if (uA.bapa === uB.nama || uB.anak.includes(uA.nama)) 
+    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Ayah/Orang tua Anda` };
 
-  // 1. AYAH & ANAK (suhanta <> lombang, januar <> pengejapen)
-  if (uB.bapa === uA.nama || (dataBapaB && clean(dataBapaB.nama) === uA.nama)) 
-    return { jenis: 'Bapa / Anak', deskripsi: 'Anda adalah Ayah dari ' + b.nama };
-  if (uA.bapa === uB.nama || (dataBapaA && clean(dataBapaA.nama) === uB.nama)) 
-    return { jenis: 'Anak / Bapa', deskripsi: 'Beliau adalah Ayah Anda' };
-
-  // 2. SENINA / TURANG (suhanta <> tarsim)
+  // --- LOGIKA PRIORITAS 2: PERSAUDARAAN & PERNIKAHAN ---
   if (uA.bapa !== "" && uA.bapa === uB.bapa) 
     return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
 
-  // 3. ERSENINA SEPEMEREN (pengejapen <> irama)
-  // Nande Pengejapen (Radu Malem) & Nande Irama (Ngunjuki) bersaudara (Satu Bapa: Kapiten)
   if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "")
-    return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Nande masing-masing adalah kakak beradik' };
-    
-    // KALI BUBU LANGSUNG (Paman / Mama)
+    return { jenis: 'Ernisenina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah kakak beradik' };
+
+  const dataIstriA = allData.find(d => superClean(d.nama) === uA.ndehara);
+  const dataIstriB = allData.find(d => superClean(d.nama) === uB.ndehara);
+  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "")
+    return { jenis: 'Siparibanen', deskripsi: 'Istri Anda dan istri beliau adalah kakak beradik' };
+
+  // --- LOGIKA PRIORITAS 3: KALI BUBU, BERE-BERE & IMPAL ---
   if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
     return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) - Saudara laki-laki Nande' };
 
-  // --- LOGIKA HUBUNGAN PERNIKAHAN (SILIH/KELA/SIPARIBANEN) ---
-
-  // 4. SILIH (pengejapen <> lombang)
-  // Istri Lombang (Pengalaman) adalah saudara Pengejapen
-  if (uB.ndehara !== "" && uA.saudara.includes(uB.ndehara))
-    return { jenis: 'Silih', deskripsi: 'Suami dari saudara perempuan Anda' };
-  if (uA.ndehara !== "" && uB.saudara.includes(uA.ndehara))
-    return { jenis: 'Silih', deskripsi: 'Anda adalah suami dari saudara perempuan beliau' };
-
-  // 5. SIPARIBANEN (suhanta <> masmur)
-  // Istri Suhanta (Muliati) & Istri Masmur (Natalia) bersaudara (Satu Bapa: Pengejapen)
-  const dataIstriA = allData.find(d => clean(d.nama) === uA.ndehara);
-  const dataIstriB = allData.find(d => clean(d.nama) === uB.ndehara);
-  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "")
-    return { jenis: 'Siparibanen', deskripsi: 'Istri masing-masing adalah kakak beradik' };
-
-  // 6. KELA / MENANTU (pengejapen <> masmur)
-  // Masmur menikah dengan Natalia (Anak Pengejapen)
-  if (uB.ndehara !== "" && (pastikanArray(a.anak).includes(uB.ndehara) || uB.ndehara.includes(uA.nama)))
-    return { jenis: 'Kela (Menantu)', deskripsi: 'Beliau adalah suami dari anak Anda' };
-
-  // --- LOGIKA KALI BUBU & BERE-BERE ---
-
-  // 7. KALI BUBU / LAKI (suhanta <> kapiten)
-  if (dataNandeA && dataNandeA.bapa === uB.nama)
-    return { jenis: 'Laki (Kakek)', deskripsi: 'Ayah dari Nande Anda' };
-
-  // 8. BERE-BERE (pengejapen <> suhanta)
-  // Suhanta adalah anak dari Pengalaman (Saudara Pengejapen)
   if (uB.nande !== "" && uA.saudara.includes(uB.nande))
     return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda' };
 
-  // 9. KALI BUBU (suhanta <> irama / pengejapen)
-  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
-    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) dari pihak Nande' };
-
-  // 10. IMPAL (suhanta <> januar)
   if (dataBapaB && dataBapaB.saudara.includes(uA.nande))
     return { jenis: 'Impal', deskripsi: 'Anak dari Mama (Kali Bubu)' };
 
-  // 11. SEMBUYAK (Satu Marga)
+  // --- LOGIKA PRIORITAS 4: MARGA ---
   if (uA.marga === uB.marga && uA.marga !== "")
     return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
 
