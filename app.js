@@ -79,139 +79,146 @@ async function loadData() {
 
 /**
  * =================================================================================
- * KODE PERBAIKAN - GANTI FUNGSI hitungHubungan LAMA ANDA DENGAN INI
+ * KODE PERBAIKAN - GANTI FUNGSI-FUNGSI INI DI app.js ANDA
  * =================================================================================
  */
 
-// [FUNGSI BANTUAN BARU] - Tambahkan ini di atas fungsi hitungHubungan
-// Fungsi ini membersihkan nama dan mengambil bagian pertama (nama depan) untuk pencocokan.
+// [FUNGSI BANTUAN] - Tetap gunakan fungsi-fungsi ini untuk normalisasi data
+
 const cleanAndGetName = (str) => {
   if (!str) return "";
-  return str.toString().toLowerCase().replace(/-/g, ' ').split(' ')[0].trim();
+  // Membersihkan dan mengambil hanya nama pertama untuk pencocokan
+  return str.toString().toLowerCase().replace(/-/g, ' ').split(',')[0].trim().split(' ')[0];
 };
 
-// Fungsi bantuan untuk mencari data lengkap seseorang berdasarkan nama
 const findPerson = (name, allData) => {
   if (!name) return null;
   const cleanedName = cleanAndGetName(name);
   return allData.find(d => cleanAndGetName(d.nama) === cleanedName);
 };
 
-// Fungsi bantuan untuk mencari AYAH seseorang (mencari di semua data)
+// --- Fungsi Pencarian Orang Tua yang Diperbarui ---
+
 const findFather = (personName, allData) => {
   const person = findPerson(personName, allData);
-  // 1. Cek dari data diri sendiri dulu
   if (person && person.bapa) return cleanAndGetName(person.bapa);
   
-  // 2. Jika tidak ada, cari di kolom 'anak' orang lain
   const cleanedPersonName = cleanAndGetName(personName);
   for (const p of allData) {
     const anakList = (p.anak || "").toString().split(',').map(n => cleanAndGetName(n));
     if (anakList.includes(cleanedPersonName)) {
-      return cleanAndGetName(p.nama); // Ayahnya adalah si empunya data
+      return cleanAndGetName(p.nama);
     }
   }
   return null;
 };
 
-// Fungsi bantuan untuk mencari IBU seseorang (mencari di semua data)
 const findMother = (personName, allData) => {
-    const person = findPerson(personName, allData);
-    // 1. Cek dari data diri sendiri dulu
-    if (person && person.nande) return cleanAndGetName(person.nande);
-    
-    // 2. Jika tidak ada, cari ibu dari data ayahnya (sebagai Ndehara)
-    const fatherName = findFather(personName, allData);
-    const fatherPerson = findPerson(fatherName, allData);
-    if (fatherPerson && fatherPerson.ndehara) {
-        return cleanAndGetName(fatherPerson.ndehara);
-    }
-    return null;
+  const person = findPerson(personName, allData);
+  if (person && person.nande) return cleanAndGetName(person.nande);
+  
+  const fatherName = findFather(personName, allData);
+  const fatherData = findPerson(fatherName, allData);
+  if (fatherData && fatherData.ndehara) {
+    return cleanAndGetName(fatherData.ndehara);
+  }
+  return null;
 };
 
 
-// [FUNGSI UTAMA YANG DIPERBAIKI]
+// [FUNGSI UTAMA YANG DIPERBARUI]
 function hitungHubungan(a, b) {
-  // Gunakan allData yang sudah ada di scope global Anda
-  const personA_name = cleanAndGetName(a.nama);
-  const personB_name = cleanAndGetName(b.nama);
+  // `allData` harus tersedia di scope ini
+  const pA_name = cleanAndGetName(a.nama);
+  const pB_name = cleanAndGetName(b.nama);
 
-  // Helper untuk mempersingkat pemanggilan
+  // Fungsi pembantu untuk mempermudah
   const getFather = (name) => findFather(name, allData);
   const getMother = (name) => findMother(name, allData);
   const getPerson = (name) => findPerson(name, allData);
+  const getBrothers = (name) => {
+      const personData = getPerson(name);
+      if (!personData || !personData.saudara) return [];
+      return personData.saudara.toString().split(',').map(s => cleanAndGetName(s));
+  };
+  
+  // Jika membandingkan diri sendiri
+  if (pA_name === pB_name) return { jenis: 'Diri Sendiri', deskripsi: 'Anda membandingkan dengan diri sendiri.'};
 
-  // --- A. HUBUNGAN DARAH LANGSUNG (BAPA/ANAK/SENINA) ---
-  if (getFather(personB_name) === personA_name) 
-    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Bapa dari ${b.nama}` };
-  if (getFather(personA_name) === personB_name)
-    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Bapa Anda` };
-  const fatherA = getFather(personA_name);
-  const fatherB = getFather(personB_name);
-  if (fatherA && fatherA === fatherB) 
-    return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa (satu bapak)' };
+  // --- 1. HUBUNGAN DARAH LANGSUNG (Bapa, Anak, Senina) ---
+  const fatherA = getFather(pA_name);
+  const fatherB = getFather(pB_name);
+  if (fatherB === pA_name) return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah dari ${b.nama}.` };
+  if (fatherA === pB_name) return { jenis: 'Anak / Bapa', deskripsi: `${b.nama} adalah Ayah Anda.` };
+  if (fatherA && fatherA === fatherB) return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa.' };
 
-  // --- B. HUBUNGAN PERNIKAHAN ---
-  // Senina Separibanen (Istri masing-masing adek kakak)
-  const wifeA = a.ndehara ? cleanAndGetName(a.ndehara) : null;
-  const wifeB = b.ndehara ? cleanAndGetName(b.ndehara) : null;
-  if (wifeA && wifeB) {
-      const fatherOfWifeA = getFather(wifeA);
-      const fatherOfWifeB = getFather(wifeB);
-      if (fatherOfWifeA && fatherOfWifeA === fatherOfWifeB)
-        return { jenis: 'Senina Separibanen', deskripsi: 'Istri Anda dan istri beliau adalah saudara kandung' };
+  // --- 2. HUBUNGAN KAKEK (LAKI) ---
+  const grandFatherA_fromFather = getFather(fatherA);
+  const grandFatherA_fromMother = getFather(getMother(pA_name));
+  if ((grandFatherA_fromFather && grandFatherA_fromFather === pB_name) || (grandFatherA_fromMother && grandFatherA_fromMother === pB_name)) {
+      return { jenis: 'Cucu / Kakek (Laki)', deskripsi: `${b.nama} adalah Kakek (Laki) Anda.` };
+  }
+
+  // --- 3. HUBUNGAN 'KALIMBUBU' (Pihak Ibu) & 'ANAK BERU' ---
+  const motherA = getMother(pA_name);
+  const motherB = getMother(pB_name);
+  // Cek apakah B adalah saudara laki-laki dari Ibu A -> B adalah Mama bagi A
+  if (motherA && getFather(motherA) && getFather(motherA) === getFather(pB_name)) {
+      return { jenis: 'Bere-bere / Mama (Kalimbubu)', deskripsi: `${b.nama} adalah Paman (Mama) Anda dari pihak Ibu.` };
+  }
+  // Cek apakah Ibu B adalah saudara perempuan dari A -> B adalah Bere-bere bagi A
+  if (motherB && fatherA && getFather(motherB) === fatherA) {
+      return { jenis: 'Mama / Bere-bere (Anak Beru)', deskripsi: `${b.nama} adalah keponakan (Bere-bere) Anda.` };
   }
   
-  // Silih (Suami dari saudara/anak perempuan)
-  const wifeB_person = getPerson(wifeB);
-  if (wifeB_person && getFather(wifeB_person.nama) === personA_name)
-    return { jenis: 'Kela / Silih', deskripsi: `Beliau adalah suami dari anak perempuan Anda`};
-
-  // --- C. HUBUNGAN IMPAL (ANAK DARI SAUDARA BEDA GENDER) ---
-  const motherA = getMother(personA_name);
-  // Kasus 1: Ibu A bersaudara dengan Ayah B
-  if (motherA && fatherB) {
-      const fatherOfMotherA = getFather(motherA);
-      const fatherOfFatherB = getFather(fatherB);
-      if (fatherOfMotherA && fatherOfMotherA === fatherOfFatherB)
-        return { jenis: 'Impal', deskripsi: 'Ibu Anda dan Ayah beliau adalah saudara kandung' };
+  // --- 4. HUBUNGAN 'IMPAL' (Cross-Cousin) ---
+  // Cek apakah Ibu A bersaudara dengan Ayah B
+  if (motherA && fatherB && getFather(motherA) === getFather(fatherB)) {
+      return { jenis: 'Impal', deskripsi: `Ibu Anda dan Ayah ${b.nama} adalah saudara kandung.` };
   }
-  // Kasus 2: Ayah A bersaudara dengan Ibu B
-  const motherB = getMother(personB_name);
-  if (fatherA && motherB) {
-      const fatherOfFatherA = getFather(fatherA);
-      const fatherOfMotherB = getFather(motherB);
-      if (fatherOfFatherA && fatherOfFatherA === fatherOfMotherB)
-        return { jenis: 'Impal', deskripsi: 'Ayah Anda dan Ibu beliau adalah saudara kandung' };
+  // Cek apakah Ayah A bersaudara dengan Ibu B
+  if (fatherA && motherB && getFather(fatherA) === getFather(motherB)) {
+      return { jenis: 'Impal', deskripsi: `Ayah Anda dan Ibu ${b.nama} adalah saudara kandung.` };
   }
 
-  // --- D. HUBUNGAN KALI BUBU / MAMA (PIHAK IBU) ---
-  // B adalah saudara laki-laki dari Ibu A
-  if (motherA && getFather(motherA) && getFather(motherA) === getFather(personB_name))
-     return { jenis: 'Kali Bubu / Mama', deskripsi: 'Beliau adalah saudara laki-laki dari Ibu Anda' };
-
-  // --- E. HUBUNGAN TURUNAN DARI SEPEMEREN/SEPARIBANAN ---
-  const motherA_data = getPerson(motherA);
-  const motherB_data = getPerson(motherB);
-  // Senina Sepemeren (Ibu sama-sama bersaudari)
-  if (motherA_data && motherB_data && getFather(motherA_data.nama) && getFather(motherA_data.nama) === getFather(motherB_data.nama)) {
-    // Jika A dan B sama-sama laki-laki, mereka Senina Sepemeren
-    return { jenis: 'Senina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah saudara kandung' };
+  // --- 5. HUBUNGAN PERIPARAN PRIA (KELA & SILIH) ---
+  const wifeB_data = getPerson(b.ndehara);
+  // Cek apakah istri B adalah saudara perempuan dari A -> B adalah Kela bagi A
+  if (wifeB_data && getFather(wifeB_data.nama) === fatherA) {
+      return { jenis: 'Kela', deskripsi: `${b.nama} adalah suami dari saudara perempuan Anda.` };
   }
-  // Jika Ibu dari A (Pengalaman) dan B (Irama) adalah sepemeren.
-  const fatherOfMotherA = getFather(motherA);
-  const motherB_father = getFather(getMother(personB_name));
-  if (fatherOfMotherA && motherB_father && getFather(fatherOfMotherA) === getFather(motherB_father)) {
-    return { jenis: 'Kali Bubu / Mama (Sepemeren)', deskripsi: 'Ibu Anda dan Ibu beliau bersaudara, sehingga beliau adalah paman (mama) Anda.' };
+  // Cek apakah istri B adalah anak perempuan A -> B adalah Silih bagi A
+  const wifeB_father = wifeB_data ? getFather(wifeB_data.nama) : null;
+  if (wifeB_father && wifeB_father === pA_name) {
+      return { jenis: 'Silih', deskripsi: `${b.nama} adalah suami dari anak perempuan Anda.` };
+  }
+
+  // --- 6. HUBUNGAN KARENA ISTRI (SEPARIBANAN) ---
+  const wifeA_data = getPerson(a.ndehara);
+  // Cek jika istri A dan istri B bersaudari -> Senina Separibanan
+  if (wifeA_data && wifeB_data) {
+      const fatherOfWifeA = getFather(wifeA_data.nama);
+      const fatherOfWifeB = getFather(wifeB_data.nama);
+      if (fatherOfWifeA && fatherOfWifeA === fatherOfWifeB) {
+          return { jenis: 'Senina Separibanan', deskripsi: 'Istri Anda dan istri beliau adalah saudara kandung.' };
+      }
+  }
+
+  // --- 7. HUBUNGAN KARENA IBU (SEPEMEREN) ---
+  // Cek jika Ibu A dan Ibu B bersaudari -> Senina Sepemeren
+  if (motherA && motherB && getFather(motherA) === getFather(motherB)) {
+      return { jenis: 'Senina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah saudara kandung.' };
   }
   
-  // --- F. SEMBUYAK (MARGA SAMA) ---
-  if (a.marga && b.marga && cleanAndGetName(a.marga) === cleanAndGetName(b.marga))
-    return { jenis: 'Sembuyak', deskripsi: 'Satu marga' };
+  // --- 8. SEMBUYAK (MARGA SAMA) ---
+  if (a.marga && b.marga && cleanAndGetName(a.marga) === cleanAndGetName(b.marga)) {
+    return { jenis: 'Sembuyak', deskripsi: 'Memiliki marga yang sama.' };
+  }
 
-  // Fallback
-  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
+  // --- FALLBACK ---
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum, perlu penelusuran lebih lanjut.' };
 }
+
 
 
 // ===== 5. UI FUNCTIONS =====
