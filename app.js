@@ -79,6 +79,7 @@ async function loadData() {
 
 // ===== 4. LOGIKA HUBUNGAN (TROMBO) =====
 function hitungHubungan(a, b) {
+  // 1. Normalisasi Data
   const uA = {
     nama: superClean(a.nama), marga: superClean(a.marga), bapa: superClean(a.bapa),
     nande: superClean(a.nande), saudara: pastikanArray(a.saudara), ndehara: superClean(a.ndehara),
@@ -91,37 +92,64 @@ function hitungHubungan(a, b) {
     anak: pastikanArray(b.anak)
   };
 
+  // 2. Ambil Data Orang Tua & Istri untuk pengecekan Lapis ke-2
   const dataBapaA = allData.find(d => superClean(d.nama) === uA.bapa);
   const dataNandeA = allData.find(d => superClean(d.nama) === uA.nande);
   const dataBapaB = allData.find(d => superClean(d.nama) === uB.bapa);
   const dataNandeB = allData.find(d => superClean(d.nama) === uB.nande);
+  const dataIstriA = allData.find(d => superClean(d.nama) === uA.ndehara);
+  const dataIstriB = allData.find(d => superClean(d.nama) === uB.ndehara);
 
-  // LOGIKA AYAH & ANAK
+  // --- A. HUBUNGAN DARAH LANGSUNG (BAPA/ANAK/SENINA) ---
   if (uB.bapa === uA.nama || uA.anak.includes(uB.nama)) 
-    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah dari ${b.nama}` };
+    return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Bapa dari ${b.nama}` };
   if (uA.bapa === uB.nama || uB.anak.includes(uA.nama)) 
-    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Ayah Anda` };
-
-  // LOGIKA SENINA / TURANG
+    return { jenis: 'Anak / Bapa', deskripsi: `Beliau adalah Bapa Anda` };
   if (uA.bapa !== "" && uA.bapa === uB.bapa) 
     return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa' };
 
-  // LOGIKA SIPARIBANEN
-  const istriA = allData.find(d => superClean(d.nama) === uA.ndehara);
-  const istriB = allData.find(d => superClean(d.nama) === uB.ndehara);
-  if (istriA && istriB && istriA.bapa === istriB.bapa && istriA.bapa !== "")
-    return { jenis: 'Siparibanen', deskripsi: 'Istri masing-masing adalah kakak beradik' };
-
-  // LOGIKA KALI BUBU & BERE-BERE
-  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande)))
-    return { jenis: 'Kali Bubu', deskripsi: 'Paman (Mama) dari pihak Nande' };
+  // --- B. HUBUNGAN PERNIKAHAN (SIPARIBANEN/SILIH/KELA) ---
+  // Senina Separibanen (Istri masing-masing adek kakak)
+  if (dataIstriA && dataIstriB && dataIstriA.bapa === dataIstriB.bapa && dataIstriA.bapa !== "")
+    return { jenis: 'Senina Separibanen', deskripsi: 'Istri masing-masing adalah saudara kandung (adek-kakak)' };
   
-  if (uB.nande !== "" && uA.saudara.includes(uB.nande))
-    return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda' };
+  // Silih (Suami dari saudara/anak)
+  if (uB.ndehara !== "" && (uA.saudara.includes(uB.ndehara) || uA.anak.includes(uB.ndehara)))
+    return { jenis: 'Silih / Kela', deskripsi: 'Beliau adalah suami dari saudara atau anak perempuan Anda' };
+  if (uA.ndehara !== "" && (uB.saudara.includes(uA.ndehara) || uB.anak.includes(uA.ndehara)))
+    return { jenis: 'Silih / Kila', deskripsi: 'Anda adalah suami dari saudara atau anak perempuan beliau' };
 
-  // LOGIKA SEMBUYAK
+  // --- C. HUBUNGAN KALI BUBU / MAMA / LAKI (PIHAK ISTRI/NANDE) ---
+  // Kali Bubu / Mama
+  if (uA.nande !== "" && (uB.nama === uA.nande || uB.saudara.includes(uA.nande) || uB.ndehara === uA.nande))
+    return { jenis: 'Kali Bubu / Mama', deskripsi: 'Pihak pemberi gadis (Paman dari garis Nande)' };
+  
+  // Laki / Kakek (Bapa dari Nande atau Bapa dari Mertua)
+  if ((dataNandeA && dataNandeA.bapa === uB.nama) || (dataIstriA && dataIstriA.bapa === uB.bapa && uB.bapa !== ""))
+    return { jenis: 'Laki / Kakek', deskripsi: 'Ayah dari Nande atau kakek dari garis istri' };
+
+  // --- D. HUBUNGAN IMPAL & BERE-BERE ---
+  // Impal (Anak dari Mama)
+  if (dataBapaB && dataBapaB.saudara.includes(uA.nande))
+    return { jenis: 'Impal', deskripsi: 'Anak dari Paman (Mama)' };
+  
+  // Bere-bere (Anak dari saudara perempuan)
+  if (uB.nande !== "" && uA.saudara.includes(uB.nande))
+    return { jenis: 'Bere-bere', deskripsi: 'Anak dari saudara perempuan Anda (Anak Beru)' };
+
+  // --- E. SENINA SEPEMEREN (Nande adek kakak) ---
+  if (dataNandeA && dataNandeB && dataNandeA.bapa === dataNandeB.bapa && dataNandeA.bapa !== "")
+    return { jenis: 'Senina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah saudara kandung' };
+
+  // --- F. LOGIKA KHUSUS ADINSAH & JANUAR ---
+  if (uA.marga === 'karo karo' && uB.marga === 'karo karo') {
+    if (dataNandeA && dataNandeB && dataNandeA.marga === dataNandeB.marga) return { jenis: 'Senina Sepemeren', deskripsi: 'Sembuyak arah nande' };
+    return { jenis: 'Sembuyak', deskripsi: 'Satu marga' };
+  }
+
+  // --- G. MARGA & UMUM ---
   if (uA.marga === uB.marga && uA.marga !== "")
-    return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Satu keturunan)' };
+    return { jenis: 'Sembuyak', deskripsi: 'Satu marga (Rakut Sitelu)' };
 
   return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum' };
 }
