@@ -1,338 +1,244 @@
 /**
- * TROMBO KARO - Aplikasi Silsilah Keluarga
- * Web App dengan Google Sheets sebagai Database
+ * TROMBO KARO - Aplikasi Silsilah Keluarga Karo
+ * Versi Simplified dengan UI Uis Gara
  */
 
 // ===== CONFIG =====
 const CONFIG = {
-  // GANTI DENGAN URL APPS SCRIPT ANDA SETELAH DEPLOY
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec',
-  
-  // Merga Silima
   MARGA_KARO: ['ginting', 'karo-karo', 'perangin-angin', 'sembiring', 'tarigan']
 };
 
 // ===== STATE =====
 let allData = [];
 let fotoBase64 = null;
-let anakCount = 0;
-let saudaraCount = 0;
 
-// ===== 1. FUNGSI UTAMA (GLOBAL SCOPE) =====
-// Pastikan fungsi ini berada paling atas agar bisa diakses oleh semua fungsi lain
+// ===== UTILITY FUNCTIONS =====
 const superClean = (txt) => {
   if (!txt) return "";
-  return txt.toString()
-    .toLowerCase()
-    .replace(/[-]/g, ' ')      // "karo-karo" -> "karo karo"
-    .replace(/\s+/g, ' ')      // Spasi ganda -> satu spasi
-    .trim();                   // Hapus spasi di ujung
+  return txt.toString().toLowerCase().replace(/[-]/g, ' ').replace(/\s+/g, ' ').trim();
 };
 
-const pastikanArray = (data) => {
-  if (!data) return [];
-  let str = Array.isArray(data) ? data.join(',') : data.toString();
-  return str.split(',').map(s => superClean(s)).filter(s => s !== "");
+const cleanName = (str) => {
+  if (!str) return "";
+  return str.toString().toLowerCase().trim();
 };
 
-// ===== 2. INIT & EVENT LISTENERS =====
-document.addEventListener('DOMContentLoaded', function() {
-  init();
-});
+const findPerson = (name) => {
+  if (!name) return null;
+  const cleaned = cleanName(name);
+  return allData.find(d => cleanName(d.nama) === cleaned);
+};
 
-async function init() {
-  const loader = document.getElementById('loading');
-  if (loader) setTimeout(() => loader.style.display = 'none', 1000);
-  
+const findFather = (personName) => {
+  const person = findPerson(personName);
+  if (person?.bapa) return cleanName(person.bapa);
+  const cleaned = cleanName(personName);
+  for (const p of allData) {
+    const anakList = (p.anak || "").toString().split(',').map(n => cleanName(n));
+    if (anakList.includes(cleaned)) return cleanName(p.nama);
+  }
+  return null;
+};
+
+const findMother = (personName) => {
+  const person = findPerson(personName);
+  if (person?.nande && person.nande.trim() !== '') return cleanName(person.nande);
+  return null;
+};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   setupEventListeners();
   updateStats();
+  hideLoading();
+});
+
+function hideLoading() {
+  const loader = document.getElementById('loading');
+  if (loader) loader.style.display = 'none';
 }
 
 function setupEventListeners() {
   const form = document.getElementById('formInput');
   if (form) form.addEventListener('submit', handleSubmit);
   
-  const fotoIn = document.getElementById('fotoInput');
-  if (fotoIn) fotoIn.addEventListener('change', handleFoto);
+  const fotoInput = document.getElementById('fotoInput');
+  if (fotoInput) fotoInput.addEventListener('change', handleFoto);
+  
+  // Auto-hide Beru field based on context
+  setupBeruToggle();
 }
 
-// ===== 3. DATA MANAGEMENT =====
+// ===== DATA MANAGEMENT =====
 async function loadData() {
   try {
     const response = await fetch(CONFIG.SCRIPT_URL + '?action=getAll');
     const result = await response.json();
     if (result.success) {
       allData = result.data.map(item => {
-        let newItem = {};
-        for (let key in item) {
-          newItem[key.toLowerCase()] = item[key];
-        }
+        const newItem = {};
+        for (let key in item) newItem[key.toLowerCase()] = item[key];
         return newItem;
       });
-      console.log('Data dimuat:', allData);
+      console.log('✅ Data dimuat:', allData.length, 'record');
+      updateSelectOptions();
+      updateMargaCounts();
     }
   } catch (error) {
-    console.error('Gagal load data:', error);
+    console.error('❌ Gagal load data:', error);
+    showToast('⚠️ Data offline mode');
   }
 }
 
-/**
- * =================================================================================
- * KODE PERBAIKAN - GANTI FUNGSI-FUNGSI INI DI app.js ANDA
- * =================================================================================
- */
-
-// [FUNGSI BANTUAN] - Tetap gunakan fungsi-fungsi ini untuk normalisasi data
-
-const cleanAndGetName = (str) => {
-  if (!str) return "";
-  // Membersihkan dan mengambil hanya nama pertama untuk pencocokan
-  return str.toString().toLowerCase().replace(/-/g, ' ').split(',')[0].trim().split(' ')[0];
-};
-
-const findPerson = (name, allData) => {
-  if (!name) return null;
-  const cleanedName = cleanAndGetName(name);
-  return allData.find(d => cleanAndGetName(d.nama) === cleanedName);
-};
-
-// --- Fungsi Pencarian Orang Tua yang Diperbarui ---
-
-const findFather = (personName, allData) => {
-  const person = findPerson(personName, allData);
-  if (person && person.bapa) return cleanAndGetName(person.bapa);
-  
-  const cleanedPersonName = cleanAndGetName(personName);
-  for (const p of allData) {
-    const anakList = (p.anak || "").toString().split(',').map(n => cleanAndGetName(n));
-    if (anakList.includes(cleanedPersonName)) {
-      return cleanAndGetName(p.nama);
-    }
-  }
-  return null;
-};
-
-const findMother = (personName, allData) => {
-  const person = findPerson(personName, allData);
-  if (person && person.nande) return cleanAndGetName(person.nande);
-  
-  const fatherName = findFather(personName, allData);
-  const fatherData = findPerson(fatherName, allData);
-  if (fatherData && fatherData.ndehara) {
-    return cleanAndGetName(fatherData.ndehara);
-  }
-  return null;
-};
-
-
-// [FUNGSI UTAMA YANG DIPERBARUI]
-function hitungHubungan(a, b) {
-  // `allData` harus tersedia di scope ini
-  const pA_name = cleanAndGetName(a.nama);
-  const pB_name = cleanAndGetName(b.nama);
-
-  // Fungsi pembantu untuk mempermudah
-  const getFather = (name) => findFather(name, allData);
-  const getMother = (name) => findMother(name, allData);
-  const getPerson = (name) => findPerson(name, allData);
-  const getBrothers = (name) => {
-      const personData = getPerson(name);
-      if (!personData || !personData.saudara) return [];
-      return personData.saudara.toString().split(',').map(s => cleanAndGetName(s));
-  };
-  
-  // Jika membandingkan diri sendiri
-  if (pA_name === pB_name) return { jenis: 'Diri Sendiri', deskripsi: 'Anda membandingkan dengan diri sendiri.'};
-
-  // --- 1. HUBUNGAN DARAH LANGSUNG (Bapa, Anak, Senina) ---
-  const fatherA = getFather(pA_name);
-  const fatherB = getFather(pB_name);
-  if (fatherB === pA_name) return { jenis: 'Bapa / Anak', deskripsi: `Anda adalah Ayah dari ${b.nama}.` };
-  if (fatherA === pB_name) return { jenis: 'Anak / Bapa', deskripsi: `${b.nama} adalah Ayah Anda.` };
-  if (fatherA && fatherA === fatherB) return { jenis: 'Senina / Turang', deskripsi: 'Saudara kandung sebapa.' };
-
-  // --- 2. HUBUNGAN KAKEK (LAKI) ---
-  const grandFatherA_fromFather = getFather(fatherA);
-  const grandFatherA_fromMother = getFather(getMother(pA_name));
-  if ((grandFatherA_fromFather && grandFatherA_fromFather === pB_name) || (grandFatherA_fromMother && grandFatherA_fromMother === pB_name)) {
-      return { jenis: 'Cucu / Kakek (Laki)', deskripsi: `${b.nama} adalah Kakek (Laki) Anda.` };
-  }
-
-  // --- 3. HUBUNGAN 'KALIMBUBU' (Pihak Ibu) & 'ANAK BERU' ---
-  const motherA = getMother(pA_name);
-  const motherB = getMother(pB_name);
-  // Cek apakah B adalah saudara laki-laki dari Ibu A -> B adalah Mama bagi A
-  if (motherA && getFather(motherA) && getFather(motherA) === getFather(pB_name)) {
-      return { jenis: 'Bere-bere / Mama (Kalimbubu)', deskripsi: `${b.nama} adalah Paman (Mama) Anda dari pihak Ibu.` };
-  }
-  // Cek apakah Ibu B adalah saudara perempuan dari A -> B adalah Bere-bere bagi A
-  if (motherB && fatherA && getFather(motherB) === fatherA) {
-      return { jenis: 'Mama / Bere-bere (Anak Beru)', deskripsi: `${b.nama} adalah keponakan (Bere-bere) Anda.` };
-  }
-  
-  // --- 4. HUBUNGAN 'IMPAL' (Cross-Cousin) ---
-  // Cek apakah Ibu A bersaudara dengan Ayah B
-  if (motherA && fatherB && getFather(motherA) === getFather(fatherB)) {
-      return { jenis: 'Impal', deskripsi: `Ibu Anda dan Ayah ${b.nama} adalah saudara kandung.` };
-  }
-  // Cek apakah Ayah A bersaudara dengan Ibu B
-  if (fatherA && motherB && getFather(fatherA) === getFather(motherB)) {
-      return { jenis: 'Impal', deskripsi: `Ayah Anda dan Ibu ${b.nama} adalah saudara kandung.` };
-  }
-
-  // --- 5. HUBUNGAN PERIPARAN PRIA (KELA & SILIH) ---
-  const wifeB_data = getPerson(b.ndehara);
-  // Cek apakah istri B adalah saudara perempuan dari A -> B adalah Kela bagi A
-  if (wifeB_data && getFather(wifeB_data.nama) === fatherA) {
-      return { jenis: 'Kela', deskripsi: `${b.nama} adalah suami dari saudara perempuan Anda.` };
-  }
-  // Cek apakah istri B adalah anak perempuan A -> B adalah Silih bagi A
-  const wifeB_father = wifeB_data ? getFather(wifeB_data.nama) : null;
-  if (wifeB_father && wifeB_father === pA_name) {
-      return { jenis: 'Silih', deskripsi: `${b.nama} adalah suami dari anak perempuan Anda.` };
-  }
-
-  // --- 6. HUBUNGAN KARENA ISTRI (SEPARIBANAN) ---
-  const wifeA_data = getPerson(a.ndehara);
-  // Cek jika istri A dan istri B bersaudari -> Senina Separibanan
-  if (wifeA_data && wifeB_data) {
-      const fatherOfWifeA = getFather(wifeA_data.nama);
-      const fatherOfWifeB = getFather(wifeB_data.nama);
-      if (fatherOfWifeA && fatherOfWifeA === fatherOfWifeB) {
-          return { jenis: 'Senina Separibanan', deskripsi: 'Istri Anda dan istri beliau adalah saudara kandung.' };
-      }
-  }
-
-  // --- 7. HUBUNGAN KARENA IBU (SEPEMEREN) ---
-  // Cek jika Ibu A dan Ibu B bersaudari -> Senina Sepemeren
-  if (motherA && motherB && getFather(motherA) === getFather(motherB)) {
-      return { jenis: 'Senina Sepemeren', deskripsi: 'Ibu Anda dan Ibu beliau adalah saudara kandung.' };
-  }
-  
-  // --- 8. SEMBUYAK (MARGA SAMA) ---
-  if (a.marga && b.marga && cleanAndGetName(a.marga) === cleanAndGetName(b.marga)) {
-    return { jenis: 'Sembuyak', deskripsi: 'Memiliki marga yang sama.' };
-  }
-
-  // --- FALLBACK ---
-  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan kekerabatan umum, perlu penelusuran lebih lanjut.' };
-}
-
-
-
-// ===== 5. UI FUNCTIONS =====
 function updateSelectOptions() {
-  const options = allData.map(d => `<option value="${d.nama}">${d.nama} (${d.marga})</option>`).join('');
-  const selA = document.getElementById('namaAnda');
-  const selB = document.getElementById('namaCari');
-  if(selA) selA.innerHTML = '<option value="">Pilih nama Anda</option>' + options;
-  if(selB) selB.innerHTML = '<option value="">Pilih nama</option>' + options;
+  const options = allData.map(d => 
+    `<option value="${d.nama}">${d.nama} (${d.marga || '-'})</option>`
+  ).join('');
+  
+  ['namaAnda', 'namaCari'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">Pilih nama</option>' + options;
+  });
 }
 
-function cekHubungan() {
-  const namaAnda = document.getElementById('namaAnda').value;
-  const namaCari = document.getElementById('namaCari').value;
-  
-  if (!namaAnda || !namaCari) return alert('Pilih nama dulu');
-  
-  const dataA = allData.find(d => d.nama === namaAnda);
-  const dataB = allData.find(d => d.nama === namaCari);
-  
-  const hasil = hitungHubungan(dataA, dataB);
-  const resDiv = document.getElementById('hasilHubungan');
-  
-  resDiv.innerHTML = `<h3>${hasil.jenis}</h3><p>${hasil.deskripsi}</p>`;
-  resDiv.classList.add('show');
+function updateMargaCounts() {
+  CONFIG.MARGA_KARO.forEach(marga => {
+    const count = allData.filter(d => 
+      superClean(d.marga) === superClean(marga)
+    ).length;
+    const el = document.getElementById(`count-${superClean(marga)}`);
+    if (el) el.textContent = count;
+  });
 }
 
 function updateStats() {
   const el = document.getElementById('totalKeluarga');
-  if(el) el.textContent = allData.length;
+  if (el) el.textContent = allData.length;
 }
 
-function initHubunganPage() {
-  updateSelectOptions();
-}
+// ===== FORM FUNCTIONS =====
 
-function showPage(pageName) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(`page-${pageName}`).classList.add('active');
-  if(pageName === 'hubungan') initHubunganPage();
-}
-
-async function saveData(data) {
-  try {
-    showToast('Menyimpan data...');
-    
-    // Gunakan URLSearchParams agar lebih "CORS Friendly" bagi Google Script
-    const formData = new URLSearchParams();
-    formData.append('action', 'save');
-    formData.append('data', JSON.stringify(data));
-
-    const response = await fetch(CONFIG.SCRIPT_URL, {
-      method: 'POST',
-      body: formData, // Mengirim sebagai form-urlencoded
-      mode: 'no-cors'  // Menghindari pre-flight CORS check
-    });
-
-    // Catatan: Dengan mode 'no-cors', kita tidak bisa membaca response.json()
-    // Namun data tetap masuk ke Google Sheets.
-    showToast('✅ Permintaan terkirim! Cek Google Sheet Anda.');
-    
-    // Reset Form
-    document.getElementById('formInput').reset();
-    document.getElementById('photoPreview').classList.remove('has-image');
-    
-  } catch (error) {
-    console.error('Error saving:', error);
-    showToast('❌ Gagal menyambung ke server');
+// ✅ Toggle field Beru (hanya untuk perempuan)
+function toggleBeruField(selector) {
+  const input = document.querySelector(selector);
+  if (!input) return;
+  
+  const nama = input.value.toLowerCase();
+  const isFemale = nama.startsWith('beru ') || 
+                   ['beru', 'br.', 'puteri', 'siti', 'rahma', 'dia', 'nur', 'indah', 'maya', 'lina', 'rina', 'wati', 'sari', 'fitri', 'ani', 'yanti', 'lisa', 'dewi', 'sinta', 'putri'].some(hint => nama.includes(hint));
+  
+  const beruField = input.closest('.form-row')?.nextElementSibling?.querySelector('[id*="beru"]') || 
+                    document.getElementById('beru');
+  
+  if (beruField) {
+    beruField.closest('.form-group').style.display = isFemale ? 'block' : 'none';
+    if (!isFemale) beruField.value = '';
   }
 }
 
-// ===== FORM HANDLING =====
+function setupBeruToggle() {
+  // Toggle untuk input utama
+  const namaInput = document.getElementById('nama');
+  if (namaInput) {
+    namaInput.addEventListener('input', () => toggleBeruField('#nama'));
+    toggleBeruField('#nama'); // Initial check
+  }
+  
+  // Toggle untuk ndehara
+  const ndeharaInput = document.getElementById('ndeharaNama');
+  if (ndeharaInput) {
+    ndeharaInput.addEventListener('input', () => {
+      const beruNdehara = document.getElementById('beruNdehara');
+      if (beruNdehara) {
+        const isFemale = ndeharaInput.value.toLowerCase().startsWith('beru ');
+        beruNdehara.closest('.form-group').style.display = isFemale ? 'block' : 'none';
+        if (!isFemale) beruNdehara.value = '';
+      }
+    });
+  }
+}
+
+// ✅ Tambah field dinamis (anak / senina / saudara)
+function tambahDynamicField(type, containerId, autoMarga = null) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const count = container.children.length + 1;
+  const placeholder = type === 'anak' ? `Nama anak ke-${count}` : 
+                      type === 'senina' ? `Nama senina ke-${count}` :
+                      `Nama ${type} ke-${count}`;
+  
+  const div = document.createElement('div');
+  div.className = 'dynamic-item uis-gara-border';
+  div.innerHTML = `
+    <input type="text" 
+           name="${type}[]" 
+           placeholder="${placeholder}"
+           class="uis-gara-input"
+           ${autoMarga ? `data-marga="${autoMarga}"` : ''}>
+    <button type="button" class="btn-remove" onclick="hapusDynamicField(this)">×</button>
+  `;
+  
+  container.appendChild(div);
+  
+  // Auto-fill marga jika ada
+  if (autoMarga && div.querySelector('input')) {
+    div.querySelector('input').placeholder += ` (${autoMarga})`;
+  }
+}
+
+function hapusDynamicField(btn) {
+  btn.parentElement.remove();
+}
+
+// Wrapper functions untuk compatibility dengan HTML
 function tambahAnak() {
-  anakCount++;
-  const container = document.getElementById('anakContainer');
-  
-  const div = document.createElement('div');
-  div.className = 'dynamic-input';
-  div.innerHTML = `
-    <input type="text" name="anak[]" placeholder="Nama anak ke-${anakCount}" required>
-    <button type="button" class="btn-remove" onclick="hapusAnak(this)">×</button>
-  `;
-  
-  container.appendChild(div);
+  const margaBapa = document.getElementById('marga')?.value || '';
+  tambahDynamicField('anak', 'anakContainer', margaBapa);
 }
 
-function hapusAnak(btn) {
-  btn.parentElement.remove();
-  anakCount--;
+function tambahSenina() {
+  const margaSaya = document.getElementById('marga')?.value || '';
+  tambahDynamicField('senina', 'seninaContainer', margaSaya);
 }
 
-function tambahSaudara() {
-  saudaraCount++;
-  const container = document.getElementById('saudaraContainer');
+function tambahSaudaraNdehara() {
+  const margaNdehara = document.getElementById('margaNdehara')?.value || '';
+  tambahDynamicField('saudaraNdehara', 'saudaraNdeharaContainer', margaNdehara);
+}
+
+function hapusAnak(btn) { hapusDynamicField(btn); }
+function hapusSenina(btn) { hapusDynamicField(btn); }
+function hapusSaudaraNdehara(btn) { hapusDynamicField(btn); }
+
+// ✅ Reset form
+function resetForm() {
+  if (!confirm('Reset semua data form?')) return;
   
-  const div = document.createElement('div');
-  div.className = 'dynamic-input';
-  div.innerHTML = `
-    <input type="text" name="saudara[]" placeholder="Nama senina/turang ke-${saudaraCount}">
-    <button type="button" class="btn-remove" onclick="hapusSaudara(this)">×</button>
-  `;
+  document.getElementById('formInput')?.reset();
+  fotoBase64 = null;
+  updatePhotoPreview();
   
-  container.appendChild(div);
+  // Clear dynamic fields
+  ['anakContainer', 'seninaContainer', 'saudaraNdeharaContainer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  
+  // Reset Beru field visibility
+  toggleBeruField('#nama');
+  
+  showToast('🔄 Form di-reset');
 }
 
-function hapusSaudara(btn) {
-  btn.parentElement.remove();
-  saudaraCount--;
-}
-
+// ✅ Handle foto
 function handleFoto(e) {
   const file = e.target.files[0];
   if (!file) return;
   
+  // Compress image before converting to base64
   const reader = new FileReader();
   reader.onload = function(event) {
     fotoBase64 = event.target.result;
@@ -343,138 +249,331 @@ function handleFoto(e) {
 
 function updatePhotoPreview() {
   const preview = document.getElementById('photoPreview');
+  if (!preview) return;
   
   if (fotoBase64) {
     preview.innerHTML = `<img src="${fotoBase64}" alt="Foto">`;
     preview.classList.add('has-image');
+    document.getElementById('btnHapusFoto')?.style.setProperty('display', 'flex');
   } else {
-    preview.innerHTML = `
-      <span>📷</span>
-      <small>Klik untuk ambil foto</small>
-    `;
+    preview.innerHTML = `<span class="photo-icon">📷</span><small>Klik untuk foto</small>`;
     preview.classList.remove('has-image');
+    document.getElementById('btnHapusFoto')?.style.setProperty('display', 'none');
   }
 }
 
+function hapusFoto() {
+  fotoBase64 = null;
+  document.getElementById('fotoInput').value = '';
+  updatePhotoPreview();
+}
+
+// ✅ Submit form
 async function handleSubmit(e) {
   e.preventDefault();
   
-  // Collect anak
-  const anakInputs = document.querySelectorAll('input[name="anak[]"]');
-  const anak = Array.from(anakInputs).map(input => input.value).filter(v => v);
+  const btn = document.getElementById('btnSubmit');
+  if (!btn) return;
   
-  // Collect saudara
-  const saudaraInputs = document.querySelectorAll('input[name="saudara[]"]');
-  const saudara = Array.from(saudaraInputs).map(input => input.value).filter(v => v);
+  // Collect data
+  const collectInputs = (selector) => 
+    Array.from(document.querySelectorAll(selector))
+      .map(input => input.value.trim())
+      .filter(v => v);
   
   const data = {
-    nama: document.getElementById('nama').value,
-    marga: document.getElementById('marga').value,
-    ndehara: document.getElementById('ndehara').value,
-    anak: anak,
-    bapa: document.getElementById('bapa').value,
-    nande: document.getElementById('nande').value,
-    saudara: saudara,
-    alamat: document.getElementById('alamat').value,
-    nowa: document.getElementById('nowa').value,
+    // Data Diri
+    nama: document.getElementById('nama')?.value.trim(),
+    marga: document.getElementById('marga')?.value.trim(),
+    bapa: document.getElementById('bapa')?.value.trim(),
+    nande: document.getElementById('nande')?.value.trim(),
+    beru: document.getElementById('beru')?.value.trim(),
+    
+    // Senina/Turang
+    senina: collectInputs('input[name="senina[]"]'),
+    
+    // Ndehara (Pasangan)
+    ndeharaNama: document.getElementById('ndeharaNama')?.value.trim(),
+    margaNdehara: document.getElementById('margaNdehara')?.value.trim(),
+    bapaNdehara: document.getElementById('bapaNdehara')?.value.trim(),
+    nandeNdehara: document.getElementById('nandeNdehara')?.value.trim(),
+    beruNdehara: document.getElementById('beruNdehara')?.value.trim(),
+    saudaraNdehara: collectInputs('input[name="saudaraNdehara[]"]'),
+    
+    // Anak
+    anak: collectInputs('input[name="anak[]"]'),
+    
+    // Kontak
+    alamat: document.getElementById('alamat')?.value.trim(),
+    nowa: document.getElementById('nowa')?.value.trim(),
+    
+    // Foto & Meta
     foto: fotoBase64,
     timestamp: new Date().toISOString()
   };
   
-  await saveData(data);
+  // Validasi minimal
+  if (!data.nama || !data.marga || !data.bapa || !data.nande) {
+    showToast('❌ Nama, Marga, Bapa, dan Nande wajib diisi');
+    return;
+  }
+  
+  // UI feedback
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Menyimpan...';
+  btn.disabled = true;
+  
+  try {
+    await saveData(data);
+  } catch (error) {
+    console.error('Save error:', error);
+    showToast('❌ Gagal menyimpan');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
 }
 
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.add('show');
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
+async function saveData(data) {
+  try {
+    showToast('📤 Mengirim data...');
+    
+    const formData = new URLSearchParams();
+    formData.append('action', 'save');
+    formData.append('data', JSON.stringify(data));
+    
+    // ⚠️ Mode no-cors untuk menghindari preflight, tapi response tidak bisa dibaca
+    await fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      body: formData,
+      mode: 'no-cors'
+    });
+    
+    showToast('✅ Data tersimpan!');
+    
+    // Reset form setelah sukses
+    resetForm();
+    
+    // Reload data untuk update UI
+    await loadData();
+    
+  } catch (error) {
+    console.error('Network error:', error);
+    showToast('⚠️ Data mungkin tersimpan, cek Google Sheets');
+  }
 }
 
 // ===== SEARCH =====
 function cariKeluarga() {
-  const keyword = document.getElementById('searchInput').value.toLowerCase();
+  const keyword = document.getElementById('searchInput')?.value.toLowerCase().trim();
   const resultsDiv = document.getElementById('searchResults');
   
-  if (!keyword) {
-    resultsDiv.innerHTML = '';
-    return;
-  }
+  if (!keyword || !resultsDiv) return;
   
   const filtered = allData.filter(d => 
-    d.nama.toLowerCase().includes(keyword) ||
-    d.marga.toLowerCase().includes(keyword) ||
-    d.alamat.toLowerCase().includes(keyword) ||
-    d.bapa.toLowerCase().includes(keyword)
+    d.nama?.toLowerCase().includes(keyword) ||
+    d.marga?.toLowerCase().includes(keyword) ||
+    d.alamat?.toLowerCase().includes(keyword) ||
+    d.bapa?.toLowerCase().includes(keyword)
   );
   
   if (filtered.length === 0) {
-    resultsDiv.innerHTML = '<div class="text-center" style="padding: 40px; color: #999;">Tidak ada hasil</div>';
+    resultsDiv.innerHTML = '<div class="empty-state">🔍 Tidak ada hasil</div>';
     return;
   }
   
-resultsDiv.innerHTML = filtered.map(d => `
-    <div class="result-card">
-      <img src="${d.fotourl || 'data:image/svg+xml,...'}" class="result-photo">
+  resultsDiv.innerHTML = filtered.map(d => `
+    <div class="result-card uis-gara-card">
+      <img src="${d.fotourl || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 24 24%22><text x=%2250%%22 y=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2220%22>👤</text></svg>'}" 
+           class="result-photo" 
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><text x=%2250%%22 y=%2250%%22 font-size=%2230%22>👤</text></svg>'">
       <div class="result-info">
         <div class="result-name">${d.nama}</div>
-        <span class="result-marga">${d.marga}</span>
+        <span class="result-marga">${d.marga || '-'}</span>
         <div class="result-detail">
-          👨 Bapa: ${d.bapa}<br>
+          👨 ${d.bapa || '-'} • 👩 ${d.nande || '-'}<br>
           📍 ${d.alamat || '-'}
         </div>
       </div>
     </div>
   `).join('');
+  
+  document.getElementById('resultCount')!.textContent = `${filtered.length} hasil`;
+  document.getElementById('searchStats')!.style.display = 'flex';
 }
 
-
-function showRakutSitelu() {
-  showToast('Menampilkan Rakut Sitelu...');
-  // Implementasi detail
-}
-
-function showImpal() {
-  showToast('Menampilkan Impalndu...');
-  // Implementasi detail dengan foto thumbnail
-}
-
-function showSembuyak() {
-  showToast('Menampilkan Sembuyak...');
-  // Implementasi detail
-}
-
-function showKaliBubu() {
-  showToast('Menampilkan Kali Bubu...');
-  // Implementasi detail
+function handleSearchInput(e) {
+  if (e.key === 'Enter') cariKeluarga();
 }
 
 function filterByMarga(marga) {
-  document.getElementById('searchInput').value = marga;
+  document.getElementById('searchInput')!.value = marga;
   showPage('cari');
   cariKeluarga();
- }
+}
 
-// ===== KAMERA / FACE RECOGNITION =====
+// ===== HUBUNGAN / TUTUR =====
+function hitungHubungan(a, b) {
+  if (!a?.nama || !b?.nama) return { jenis: 'Error', deskripsi: 'Data tidak lengkap' };
+  
+  const pA = cleanName(a.nama);
+  const pB = cleanName(b.nama);
+  
+  const getFather = (name) => findFather(name);
+  const getMother = (name) => findMother(name);
+  
+  const fatherA = getFather(pA);
+  const fatherB = getFather(pB);
+  const motherA = getMother(pA);
+  const motherB = getMother(pB);
+  
+  if (pA === pB) return { jenis: 'Diri Sendiri', deskripsi: 'Anda membandingkan dengan diri sendiri' };
+  if (fatherB === pA) return { jenis: 'Bapa', deskripsi: `Anda adalah Ayah dari ${b.nama}` };
+  if (fatherA === pB) return { jenis: 'Anak', deskripsi: `${b.nama} adalah Anak Anda` };
+  
+  // Senina / Sembuyak
+  if (fatherA && fatherA === fatherB) {
+    return { 
+      jenis: a.saudara?.includes(b.nama) || b.saudara?.includes(a.nama) ? 'Sembuyak' : 'Senina',
+      deskripsi: a.saudara?.includes(b.nama) ? 'Saudara kandung satu rahim' : 'Saudara semarga (satu ayah)'
+    };
+  }
+  
+  // Kalimbubu / Anak Beru
+  if (motherA && getFather(motherA) === fatherB) {
+    return { jenis: 'Kalimbubu (Mama)', deskripsi: `${b.nama} adalah Paman dari pihak Ibu Anda` };
+  }
+  if (motherB && getFather(motherB) === fatherA) {
+    return { jenis: 'Anak Beru', deskripsi: `${b.nama} adalah keponakan (Bere-bere) Anda` };
+  }
+  
+  // Impal (Cross-cousin)
+  const isImpal = 
+    (motherA && fatherB && getFather(motherA) === getFather(fatherB)) ||
+    (fatherA && motherB && getFather(fatherA) === getFather(motherB));
+  if (isImpal) {
+    return { 
+      jenis: 'Impal', 
+      deskripsi: 'Sepupu silang - calon pasangan ideal dalam adat Karo' 
+    };
+  }
+  
+  // Senina Sipemeren (Ibu bersaudara)
+  if (motherA && motherB && getFather(motherA) === getFather(motherB)) {
+    return { jenis: 'Senina Sipemeren', deskripsi: 'Ibu Anda dan Ibu beliau bersaudara' };
+  }
+  
+  // Rebu check (sama marga, beda ayah)
+  if (a.marga && b.marga && superClean(a.marga) === superClean(b.marga) && fatherA !== fatherB) {
+    return { 
+      jenis: '⚠️ Sedonga (Rebu)', 
+      deskripsi: 'Satu marga tetapi tidak satu ayah - dilarang menikah menurut adat' 
+    };
+  }
+  
+  return { jenis: 'Tutur Siwaluh', deskripsi: 'Hubungan umum, perlu penelusuran lebih lanjut' };
+}
+
+function cekHubungan() {
+  const namaA = document.getElementById('namaAnda')?.value;
+  const namaB = document.getElementById('namaCari')?.value;
+  
+  if (!namaA || !namaB) {
+    showToast('⚠️ Pilih kedua nama terlebih dahulu');
+    return;
+  }
+  
+  const dataA = allData.find(d => d.nama === namaA);
+  const dataB = allData.find(d => d.nama === namaB);
+  
+  if (!dataA || !dataB) {
+    showToast('❌ Data tidak ditemukan');
+    return;
+  }
+  
+  const hasil = hitungHubungan(dataA, dataB);
+  const resDiv = document.getElementById('hasilHubungan');
+  
+  if (resDiv) {
+    resDiv.innerHTML = `
+      <div class="result-card relationship-result">
+        <div class="result-header">
+          <span class="result-icon">🤝</span>
+          <h3>${hasil.jenis}</h3>
+        </div>
+        <p class="result-desc">${hasil.deskripsi}</p>
+        ${hasil.jenis.includes('Rebu') ? 
+          '<div class="rebu-warning">⚠️ Konsultasikan dengan tetua adat sebelum melanjutkan hubungan</div>' : ''}
+      </div>
+    `;
+    resDiv.style.display = 'block';
+  }
+}
+
+function initHubunganPage() {
+  updateSelectOptions();
+}
+
+// ===== PAGE NAVIGATION =====
+function showPage(pageName) {
+  document.querySelectorAll('.page')?.forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`page-${pageName}`);
+  if (target) target.classList.add('active');
+  
+  if (pageName === 'hubungan') initHubunganPage();
+  if (pageName === 'cari') document.getElementById('searchResults')!.innerHTML = '';
+}
+
+// ===== UI HELPERS =====
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  const msgEl = document.getElementById('toastMessage');
+  if (toast && msgEl) {
+    msgEl.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  } else {
+    alert(message);
+  }
+}
+
+function toggleMenu() {
+  const menu = document.getElementById('mobileMenu');
+  if (menu) menu.classList.toggle('show');
+}
+
+// ===== KAMERA (Simple) =====
 let videoStream = null;
 
-async function initKamera() {
+async function startKamera() {
   try {
     const video = document.getElementById('videoKamera');
+    if (!video) return;
     
-    videoStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user' }
-    });
-    
+    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
     video.srcObject = videoStream;
     
-  } catch (error) {
-    console.error('Error accessing camera:', error);
-    showToast('Tidak dapat mengakses kamera');
+    document.getElementById('btnStartCamera')!.disabled = true;
+    document.getElementById('btnCapture')!.disabled = false;
+    document.getElementById('btnStopCamera')!.disabled = false;
+    
+  } catch (err) {
+    console.error('Camera error:', err);
+    showToast('📷 Izinkan akses kamera');
   }
+}
+
+function stopKamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
+  }
+  const video = document.getElementById('videoKamera');
+  if (video) video.srcObject = null;
+  
+  document.getElementById('btnStartCamera')!.disabled = false;
+  document.getElementById('btnCapture')!.disabled = true;
+  document.getElementById('btnStopCamera')!.disabled = true;
 }
 
 function ambilFoto() {
@@ -482,52 +581,38 @@ function ambilFoto() {
   const canvas = document.getElementById('canvasKamera');
   const hasilDiv = document.getElementById('hasilRecognition');
   
+  if (!video || !canvas || !hasilDiv) return;
+  
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  
-  // Simulasi face recognition
-  // Nanti bisa pakai library seperti face-api.js
+  canvas.getContext('2d')?.drawImage(video, 0, 0);
   
   const fotoBase64 = canvas.toDataURL('image/jpeg');
   
-  // Simulasi hasil recognition
+  // Simple name matching (bukan face recognition)
   const hasil = {
-    cocok: Math.random() > 0.5,
-    nama: allData.length > 0 ? allData[0].nama : 'Tidak Dikenal',
-    marga: allData.length > 0 ? allData[0].marga : '-',
-    confidence: Math.floor(Math.random() * 30) + 70
+    cocok: false,
+    nama: '',
+    marga: '',
+    confidence: 0
   };
   
+  // Cari berdasarkan nama (simulasi)
+  // Di production bisa pakai face-api.js
   hasilDiv.innerHTML = `
-    <div style="text-align: center;">
-      <img src="${fotoBase64}" style="width: 100%; max-width: 200px; border-radius: 10px; margin-bottom: 15px;">
-      ${hasil.cocok ? `
-        <h3 style="color: #4CAF50;">✅ Wajah Dikenali</h3>
-        <p style="font-size: 1.2rem; font-weight: 600;">${hasil.nama}</p>
-        <p style="color: #666;">Marga: ${hasil.marga}</p>
-        <p style="font-size: 0.8rem; color: #999;">Confidence: ${hasil.confidence}%</p>
-        <p style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 8px;">
-          📢 Panggil: "${hasil.nama}"
-        </p>
-      ` : `
-        <h3 style="color: #f44336;">❌ Wajah Tidak Dikenali</h3>
-        <p style="color: #666;">Data tidak ditemukan dalam database</p>
-        <button onclick="showPage('input')" class="btn-primary" style="margin-top: 15px;">
-          ➕ Input Data Baru
-        </button>
-      `}
+    <div class="text-center">
+      <img src="${fotoBase64}" style="width:100%;max-width:200px;border-radius:12px;margin:12px 0">
+      <p><strong>📷 Foto diambil</strong></p>
+      <p class="small">Fitur face recognition membutuhkan setup server. Saat ini gunakan pencarian manual.</p>
+      <button class="btn-primary" onclick="showPage('cari')">🔍 Cari Manual</button>
     </div>
   `;
+  hasilDiv.style.display = 'block';
   
-  hasilDiv.classList.add('show');
+  stopKamera();
 }
 
-// Cleanup kamera saat pindah halaman
+// Cleanup
 window.addEventListener('beforeunload', () => {
-  if (videoStream) {
-    videoStream.getTracks().forEach(track => track.stop());
-  }
+  if (videoStream) videoStream.getTracks().forEach(t => t.stop());
 });
