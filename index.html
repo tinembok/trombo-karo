@@ -3,304 +3,994 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🌳 Trombo Karo</title>
+  <title>🌳 Trombo Karo - Silsilah Keluarga Karo</title>
+  
+  <!-- PWA Support -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2E7D32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Loading Screen -->
-  <div id="loading" class="loading-screen">
+
+  <!-- ===== LOADING SCREEN ===== -->
+  <div id="loading" class="loading-screen active">
     <div class="spinner"></div>
-    <p>Memuat Trombo Karo...</p>
+    <p class="karo-text">Mejuah-juah... Memuat Trombo Karo...</p>
+    <small class="loading-sub">Menyiapkan data kekerabatan</small>
   </div>
 
-  <!-- Header -->
+  <!-- ===== HEADER ===== -->
   <header class="header">
     <div class="header-content">
-      <h1>🌳 Trombo Karo</h1>
-      <p>Silsilah Keluarga Karo</p>
+      <div class="header-logo">🌳</div>
+      <div class="header-text">
+        <h1>Trombo Karo</h1>
+        <p class="header-subtitle">Silsilah & Ertutur Keluarga Karo</p>
+      </div>
+      <button class="btn-icon" onclick="toggleMenu()" aria-label="Menu">
+        <span>☰</span>
+      </button>
+    </div>
+    
+    <!-- Mobile Menu Dropdown -->
+    <div id="mobileMenu" class="mobile-menu">
+      <a href="#" onclick="showPage('home'); toggleMenu()">🏠 Beranda</a>
+      <a href="#" onclick="showPage('input'); toggleMenu()">📝 Input Data</a>
+      <a href="#" onclick="showPage('cari'); toggleMenu()">🔍 Cari</a>
+      <a href="#" onclick="showPage('hubungan'); toggleMenu()">👥 Cek Hubungan</a>
+      <a href="#" onclick="showPage('referensi'); toggleMenu()">📚 Referensi Adat</a>
+      <a href="#" onclick="showPage('kamera'); toggleMenu()">📷 Face Scan</a>
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- ===== MAIN CONTAINER ===== -->
   <main class="container">
     
-    <!-- Navigation Menu -->
+    <!-- ===== NAVIGATION (Desktop) ===== -->
     <nav class="nav-menu" id="navMenu">
-      <button class="nav-btn active" onclick="showPage('home')">
-        <span>🏠</span>
-        <small>Beranda</small>
+      <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Beranda</span>
       </button>
-      <button class="nav-btn" onclick="showPage('input')">
-        <span>➕</span>
-        <small>Input</small>
+      <button class="nav-btn" data-page="input" onclick="showPage('input')">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label">Input</span>
       </button>
-      <button class="nav-btn" onclick="showPage('cari')">
-        <span>🔍</span>
-        <small>Cari</small>
+      <button class="nav-btn" data-page="cari" onclick="showPage('cari')">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label">Cari</span>
       </button>
-      <button class="nav-btn" onclick="showPage('hubungan')">
-        <span>👥</span>
-        <small>Hubungan</small>
+      <button class="nav-btn" data-page="hubungan" onclick="showPage('hubungan')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Hubungan</span>
       </button>
-      <button class="nav-btn" onclick="showPage('kamera')">
-        <span>📷</span>
-        <small>Kamera</small>
+      <button class="nav-btn" data-page="referensi" onclick="showPage('referensi')">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">Adat</span>
+      </button>
+      <button class="nav-btn" data-page="kamera" onclick="showPage('kamera')">
+        <span class="nav-icon">📷</span>
+        <span class="nav-label">Scan</span>
       </button>
     </nav>
 
-    <!-- PAGE: HOME -->
+    <!-- ===== PAGE: HOME ===== -->
     <section id="page-home" class="page active">
-      <div class="hero">
-        <h2>Selamat Datang</h2>
-        <p>Aplikasi silsilah keluarga Karo untuk menemukan Rakut Sitelu, Impal, dan Kali Bubu</p>
-      </div>
       
-      <div class="stats-cards">
+      <!-- Hero Section -->
+      <div class="hero">
+        <h2 class="karo-greeting">Mejuah-juah! 🙏</h2>
+        <p class="hero-desc">
+          Aplikasi silsilah keluarga Karo untuk menemukan <strong>Rakut Sitelu</strong>, 
+          <strong>Impal</strong>, dan menelusuri <strong>Tutur Siwaluh</strong>.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="showPage('input')">➕ Tambah Data</button>
+          <button class="btn-outline" onclick="showPage('cari')">🔍 Cari Keluarga</button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-icon">👨‍👩‍👧‍👦</span>
           <span class="stat-number" id="totalKeluarga">0</span>
-          <span class="stat-label">Keluarga</span>
+          <span class="stat-label">Keluarga Terdaftar</span>
         </div>
         <div class="stat-card">
           <span class="stat-icon">🏛️</span>
           <span class="stat-number" id="totalMarga">5</span>
-          <span class="stat-label">Marga</span>
+          <span class="stat-label">Merga Silima</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🤝</span>
+          <span class="stat-number" id="totalHubungan">0</span>
+          <span class="stat-label">Hubungan Terdeteksi</span>
         </div>
       </div>
 
-      <div class="marga-section">
-        <h3>Merga Silima</h3>
+      <!-- Merga Silima Section -->
+      <div class="section">
+        <h3 class="section-title">🏛️ Merga Silima</h3>
+        <p class="section-desc">Lima marga induk Suku Karo</p>
+        
         <div class="marga-grid">
-          <div class="marga-item" onclick="filterByMarga('Ginting')">
-            <span class="marga-icon">G</span>
-            <span>Ginting</span>
+          <div class="marga-item" onclick="filterByMarga('Ginting')" data-marga="Ginting">
+            <span class="marga-icon marga-ginting">G</span>
+            <span class="marga-name">Ginting</span>
+            <span class="marga-count" id="count-ginting">0</span>
           </div>
-          <div class="marga-item" onclick="filterByMarga('Karo-Karo')">
-            <span class="marga-icon">K</span>
-            <span>Karo-Karo</span>
+          <div class="marga-item" onclick="filterByMarga('Karo-Karo')" data-marga="Karo-Karo">
+            <span class="marga-icon marga-karo">K</span>
+            <span class="marga-name">Karo-Karo</span>
+            <span class="marga-count" id="count-karo">0</span>
           </div>
-          <div class="marga-item" onclick="filterByMarga('Perangin-angin')">
-            <span class="marga-icon">P</span>
-            <span>Perangin-angin</span>
+          <div class="marga-item" onclick="filterByMarga('Perangin-angin')" data-marga="Perangin-angin">
+            <span class="marga-icon marga-perangin">P</span>
+            <span class="marga-name">Perangin-angin</span>
+            <span class="marga-count" id="count-perangin">0</span>
           </div>
-          <div class="marga-item" onclick="filterByMarga('Sembiring')">
-            <span class="marga-icon">S</span>
-            <span>Sembiring</span>
+          <div class="marga-item" onclick="filterByMarga('Sembiring')" data-marga="Sembiring">
+            <span class="marga-icon marga-sembiring">S</span>
+            <span class="marga-name">Sembiring</span>
+            <span class="marga-count" id="count-sembiring">0</span>
           </div>
-          <div class="marga-item" onclick="filterByMarga('Tarigan')">
-            <span class="marga-icon">T</span>
-            <span>Tarigan</span>
+          <div class="marga-item" onclick="filterByMarga('Tarigan')" data-marga="Tarigan">
+            <span class="marga-icon marga-tarigan">T</span>
+            <span class="marga-name">Tarigan</span>
+            <span class="marga-count" id="count-tarigan">0</span>
           </div>
         </div>
       </div>
+
+      <!-- Rakut Sitelu Quick Guide -->
+      <div class="section">
+        <h3 class="section-title">🤝 Rakut Sitelu</h3>
+        <p class="section-desc">Tiga ikatan sosial inti dalam adat Karo</p>
+        
+        <div class="rakut-grid">
+          <div class="rakut-card kalimbubu">
+            <div class="rakut-icon">🏛️</div>
+            <h4>Kalimbubu</h4>
+            <p>Pihak pemberi perempuan. Dihormati sebagai "Dibata Ni Idah".</p>
+            <small>Hak: menerima ulu mas, bere-bere</small>
+          </div>
+          <div class="rakut-card senina">
+            <div class="rakut-icon">👥</div>
+            <h4>Senina</h4>
+            <p>Saudara semarga (patrilineal). Memimpin musyawarah adat.</p>
+            <small>Tugas: menjaga persatuan marga</small>
+          </div>
+          <div class="rakut-card anakberu">
+            <div class="rakut-icon">🤝</div>
+            <h4>Anak Beru</h4>
+            <p>Pihak penerima perempuan. "Hakim moral" keluarga.</p>
+            <small>Tugas: menyiapkan acara, menjaga harta</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section">
+        <h3 class="section-title">⚡ Aksi Cepat</h3>
+        <div class="quick-actions">
+          <button class="action-card" onclick="showRakutSitelu()">
+            <span>🤝</span>
+            <span>Cek Rakut Sitelu</span>
+          </button>
+          <button class="action-card" onclick="showImpal()">
+            <span>💑</span>
+            <span>Temukan Impal</span>
+          </button>
+          <button class="action-card" onclick="checkRebu()">
+            <span>⚠️</span>
+            <span>Cek Rebu (Pantang)</span>
+          </button>
+          <button class="action-card" onclick="showErtuturSimulator()">
+            <span>🗣️</span>
+            <span>Ertutur Simulator</span>
+          </button>
+        </div>
+      </div>
+
     </section>
 
-    <!-- PAGE: INPUT FORM -->
+    <!-- ===== PAGE: INPUT FORM ===== -->
     <section id="page-input" class="page">
       <div class="form-header">
         <h2>📝 Input Data Keluarga</h2>
-        <p>Isi data dengan lengkap</p>
+        <p>Lengkapi data untuk akurasi penelusuran kekerabatan</p>
+        <div class="form-hint">
+          <small>⭐ Field bertanda * wajib diisi</small>
+        </div>
       </div>
 
-      <form id="formInput" class="input-form">
-        <!-- Foto -->
-        <div class="form-section">
-          <label class="section-title">📷 Foto</label>
+      <form id="formInput" class="input-form" novalidate>
+        
+        <!-- Section: Foto -->
+        <fieldset class="form-section">
+          <legend class="section-title">📷 Foto Profil</legend>
           <div class="photo-upload">
-            <div class="photo-preview" id="photoPreview">
-              <span>📷</span>
-              <small>Klik untuk ambil foto</small>
+            <div class="photo-preview" id="photoPreview" onclick="document.getElementById('fotoInput').click()">
+              <span class="photo-placeholder">📷</span>
+              <small>Klik untuk ambil/upload foto</small>
             </div>
-            <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
-            <button type="button" class="btn-camera" onclick="document.getElementById('fotoInput').click()">
-              📷 Kamera / Upload
-            </button>
+            <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
+            <div class="photo-actions">
+              <button type="button" class="btn-sm" onclick="document.getElementById('fotoInput').click()">📷 Kamera</button>
+              <button type="button" class="btn-sm btn-danger" onclick="hapusFoto()" id="btnHapusFoto" style="display:none;">🗑️ Hapus</button>
+            </div>
           </div>
-        </div>
+        </fieldset>
 
-        <!-- Data Pribadi -->
-        <div class="form-section">
-          <label class="section-title">👤 Data Pribadi</label>
+        <!-- Section: Data Pribadi -->
+        <fieldset class="form-section">
+          <legend class="section-title">👤 Data Pribadi</legend>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nama">Nama Lengkap *</label>
+              <input type="text" id="nama" name="nama" placeholder="Contoh: John Ginting" required 
+                     pattern="^[A-Za-z\s\.\-']{3,50}$" title="Minimal 3 karakter, hanya huruf dan spasi">
+              <small class="form-help">Gunakan nama lengkap sesuai KTP/adat</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="gender">Gender *</label>
+              <select id="gender" name="gender" required onchange="toggleBeruField()">
+                <option value="">Pilih Gender</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="marga">Marga *</label>
+              <select id="marga" name="marga" required onchange="updateSubMargaOptions()">
+                <option value="">Pilih Marga</option>
+                <option value="Ginting">Ginting</option>
+                <option value="Karo-Karo">Karo-Karo</option>
+                <option value="Perangin-angin">Perangin-angin</option>
+                <option value="Sembiring">Sembiring</option>
+                <option value="Tarigan">Tarigan</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="subMarga">Sub-Marga (Opsional)</label>
+              <select id="subMarga" name="subMarga">
+                <option value="">Pilih Sub-Marga</option>
+                <!-- Dynamic options based on marga selection -->
+              </select>
+            </div>
+          </div>
+
+          <!-- BERU Field (Hanya untuk Perempuan) -->
+          <div class="form-group conditional" id="beruGroup" style="display:none;">
+            <label for="beru">Beru <small>(khusus perempuan Karo)</small></label>
+            <input type="text" id="beru" name="beru" placeholder="Contoh: Beru Ginting"
+                   pattern="^Beru\s+[A-Za-z\-]+$" title="Format: Beru [Marga]">
+            <small class="form-help">Beru = nama marga ayah untuk perempuan Karo</small>
+          </div>
+        </fieldset>
+
+        <!-- Section: Orang Tua -->
+        <fieldset class="form-section">
+          <legend class="section-title">👨‍👩 Orang Tua Kandung</legend>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bapa">Bapa (Ayah) *</label>
+              <input type="text" id="bapa" name="bapa" placeholder="Nama ayah kandung" required
+                     list="daftarNama" autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+              <label for="nande">Nande (Ibu) *</label>
+              <input type="text" id="nande" name="nande" placeholder="Nama ibu kandung" required
+                     list="daftarNama" autocomplete="off">
+            </div>
+          </div>
           
           <div class="form-group">
-            <label>Nama Lengkap *</label>
-            <input type="text" id="nama" placeholder="Contoh: John Ginting" required>
+            <label for="kalimbubuMarga">Marga Kalimbubu <small>(pihak ibu)</small></label>
+            <input type="text" id="kalimbubuMarga" name="kalimbubuMarga" 
+                   placeholder="Marga dari pihak Ibu (untuk validasi Rebu)"
+                   list="daftarMarga">
+            <small class="form-help">Penting untuk deteksi pantang pernikahan (Rebu)</small>
           </div>
+        </fieldset>
 
-          <div class="form-group">
-            <label>Marga *</label>
-            <select id="marga" required>
-              <option value="">Pilih Marga</option>
-              <option value="Ginting">Ginting</option>
-              <option value="Karo-Karo">Karo-Karo</option>
-              <option value="Perangin-angin">Perangin-angin</option>
-              <option value="Sembiring">Sembiring</option>
-              <option value="Tarigan">Tarigan</option>
-            </select>
+        <!-- Section: Pasangan (Ndehara) -->
+        <fieldset class="form-section">
+          <legend class="section-title">💑 Ndehara (Pasangan)</legend>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ndeharaNama">Nama Pasangan</label>
+              <input type="text" id="ndeharaNama" name="ndeharaNama" 
+                     placeholder="Nama suami/istri" list="daftarNama">
+            </div>
+            
+            <div class="form-group">
+              <label for="ndeharaMarga">Marga Pasangan</label>
+              <input type="text" id="ndeharaMarga" name="ndeharaMarga" 
+                     placeholder="Marga pasangan" list="daftarMarga">
+            </div>
           </div>
-        </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ndeharaGender">Gender Pasangan</label>
+              <select id="ndeharaGender" name="ndeharaGender">
+                <option value="">Pilih</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="tanggalNikah">Tanggal Menikah</label>
+              <input type="date" id="tanggalNikah" name="tanggalNikah">
+            </div>
+          </div>
+        </fieldset>
 
-        <!-- Ndehara (Pasangan) -->
-        <div class="form-section">
-          <label class="section-title">💑 Ndehara (Pasangan)</label>
-          <div class="form-group">
-            <input type="text" id="ndehara" placeholder="Nama suami/istri (jika sudah menikah)">
+        <!-- Section: Anak (Dynamic) -->
+        <fieldset class="form-section">
+          <legend class="section-title">👶 Anak Kandung</legend>
+          <div id="anakContainer" class="dynamic-list">
+            <!-- Dynamic inputs will be added here -->
           </div>
-        </div>
-
-        <!-- Anak (Dynamic Input) -->
-        <div class="form-section">
-          <label class="section-title">👶 Anak</label>
-          <div id="anakContainer">
-            <!-- Dynamic anak inputs will be added here -->
-          </div>
-          <button type="button" class="btn-add" onclick="tambahAnak()">
-            <span>+</span> Tambah Anak
+          <button type="button" class="btn-add" onclick="tambahDynamicField('anak')">
+            <span>➕</span> Tambah Anak
           </button>
-        </div>
+        </fieldset>
 
-        <!-- Orang Tua -->
-        <div class="form-section">
-          <label class="section-title">👨‍👩 Orang Tua</label>
-          
-          <div class="form-group">
-            <label>Bapa (Ayah) *</label>
-            <input type="text" id="bapa" placeholder="Nama ayah kandung" required>
+        <!-- Section: Saudara (Dynamic) -->
+        <fieldset class="form-section">
+          <legend class="section-title">👫 Senina/Turang (Saudara Kandung)</legend>
+          <div id="saudaraContainer" class="dynamic-list">
+            <!-- Dynamic inputs will be added here -->
           </div>
-
-          <div class="form-group">
-            <label>Nande (Ibu) *</label>
-            <input type="text" id="nande" placeholder="Nama ibu kandung" required>
-          </div>
-        </div>
-
-        <!-- Senina/Turang (Saudara) -->
-        <div class="form-section">
-          <label class="section-title">👫 Senina/Turang (Saudara)</label>
-          <div id="saudaraContainer">
-            <!-- Dynamic saudara inputs will be added here -->
-          </div>
-          <button type="button" class="btn-add" onclick="tambahSaudara()">
-            <span>+</span> Tambah Saudara
+          <button type="button" class="btn-add" onclick="tambahDynamicField('saudara')">
+            <span>➕</span> Tambah Saudara
           </button>
-        </div>
+          <small class="form-help">Hanya saudara kandung seayah-seibu</small>
+        </fieldset>
 
-        <!-- Kontak -->
-        <div class="form-section">
-          <label class="section-title">📞 Kontak</label>
+        <!-- Section: Bere-bere & Hubungan Kalimbubu -->
+        <fieldset class="form-section advanced">
+          <legend class="section-title">🔗 Hubungan Kalimbubu (Lanjutan)</legend>
           
           <div class="form-group">
-            <label>Alamat</label>
-            <textarea id="alamat" rows="2" placeholder="Desa/Kecamatan/Kabupaten"></textarea>
+            <label for="bereBere">Bere-bere <small>(Beru dari Ibu Kandung)</small></label>
+            <input type="text" id="bereBere" name="bereBere" 
+                   placeholder="Contoh: Beru Tarigan"
+                   title="Hanya muncul dalam ertutur formal">
+            <small class="form-help">Digunakan saat ertutur dengan pihak Kalimbubu</small>
           </div>
-
+          
           <div class="form-group">
-            <label>No. WhatsApp</label>
-            <input type="tel" id="nowa" placeholder="0812xxxxxxxx">
+            <label for="hubunganKalimbubu">Nama Kalimbubu Utama</label>
+            <input type="text" id="hubunganKalimbubu" name="hubunganKalimbubu"
+                   placeholder="Nama pihak Kalimbubu yang dihormati"
+                   list="daftarNama">
           </div>
-        </div>
+        </fieldset>
 
+        <!-- Section: Catatan Adat -->
+        <fieldset class="form-section advanced">
+          <legend class="section-title">📜 Catatan Adat</legend>
+          
+          <div class="form-group">
+            <label for="catatanAdat">Catatan Khusus</label>
+            <textarea id="catatanAdat" name="catatanAdat" rows="3"
+                      placeholder="Contoh: Rebu dengan marga X, pantangan tertentu, dll"></textarea>
+            <small class="form-help">Catatan pantangan adat, Rebu, atau informasi khusus</small>
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="isRebu" name="isRebu" value="1">
+              <span>⚠️ Ada pantang Rebu dengan marga tertentu</span>
+            </label>
+            <div id="rebuDetails" class="conditional" style="display:none; margin-left: 24px;">
+              <input type="text" id="rebuMarga" name="rebuMarga" 
+                     placeholder="Marga yang dilarang (pisahkan koma)"
+                     list="daftarMarga">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section: Kontak -->
+        <fieldset class="form-section">
+          <legend class="section-title">📞 Kontak & Alamat</legend>
+          
+          <div class="form-group">
+            <label for="alamat">Alamat Lengkap</label>
+            <textarea id="alamat" name="alamat" rows="2"
+                      placeholder="Desa/Kecamatan/Kabupaten"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nowa">No. WhatsApp</label>
+              <input type="tel" id="nowa" name="nowa" placeholder="0812xxxxxxxx"
+                     pattern="^08[0-9]{9,11}$" title="Format: 081234567890">
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email (Opsional)</label>
+              <input type="email" id="email" name="email" placeholder="email@contoh.com">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Form Actions -->
         <div class="form-actions">
-          <button type="submit" class="btn-primary">
-            💾 Simpan Data
+          <button type="button" class="btn-outline" onclick="resetForm()">🔄 Reset</button>
+          <button type="submit" class="btn-primary" id="btnSubmit">
+            <span class="btn-text">💾 Simpan Data</span>
+            <span class="btn-loading" style="display:none;">⏳ Menyimpan...</span>
           </button>
         </div>
+        
       </form>
+
+      <!-- Datalists for autocomplete -->
+      <datalist id="daftarNama"></datalist>
+      <datalist id="daftarMarga">
+        <option value="Ginting">
+        <option value="Karo-Karo">
+        <option value="Perangin-angin">
+        <option value="Sembiring">
+        <option value="Tarigan">
+      </datalist>
     </section>
 
-    <!-- PAGE: CARI -->
+    <!-- ===== PAGE: CARI ===== -->
     <section id="page-cari" class="page">
       <div class="search-header">
         <h2>🔍 Cari Keluarga</h2>
+        <p class="search-desc">Cari berdasarkan nama, marga, desa, atau hubungan</p>
+        
         <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Cari nama, marga, atau desa...">
-          <button onclick="cariKeluarga()">Cari</button>
+          <input type="text" id="searchInput" placeholder="Cari nama, marga, atau desa..." 
+                 onkeyup="handleSearchInput(event)">
+          <button class="btn-search" onclick="cariKeluarga()">🔍</button>
+        </div>
+        
+        <!-- Advanced Filters -->
+        <div class="search-filters">
+          <details>
+            <summary>⚙️ Filter Lanjutan</summary>
+            <div class="filter-grid">
+              <select id="filterMarga" onchange="applyFilters()">
+                <option value="">Semua Marga</option>
+                <option value="Ginting">Ginting</option>
+                <option value="Karo-Karo">Karo-Karo</option>
+                <option value="Perangin-angin">Perangin-angin</option>
+                <option value="Sembiring">Sembiring</option>
+                <option value="Tarigan">Tarigan</option>
+              </select>
+              
+              <select id="filterGender" onchange="applyFilters()">
+                <option value="">Semua Gender</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+              
+              <input type="text" id="filterDesa" placeholder="Filter desa..." 
+                     onkeyup="applyFilters()">
+            </div>
+          </details>
         </div>
       </div>
-      <div id="searchResults" class="results-container"></div>
+      
+      <!-- Search Results -->
+      <div id="searchResults" class="results-container">
+        <div class="empty-state">
+          <span class="empty-icon">🔍</span>
+          <p>Mulai pencarian untuk menemukan keluarga</p>
+        </div>
+      </div>
+      
+      <!-- Result Stats -->
+      <div id="searchStats" class="search-stats" style="display:none;">
+        <small id="resultCount">0 hasil ditemukan</small>
+        <button class="btn-sm" onclick="exportResults()">📥 Export</button>
+      </div>
     </section>
 
-    <!-- PAGE: HUBUNGAN -->
+    <!-- ===== PAGE: HUBUNGAN ===== -->
     <section id="page-hubungan" class="page">
       <div class="hubungan-header">
-        <h2>👥 Cek Hubungan</h2>
-        <p>Temukan hubungan kekerabatan</p>
+        <h2>👥 Cek Hubungan Kekerabatan</h2>
+        <p class="hubungan-desc">Temukan hubungan menurut Rakut Sitelu & Tutur Siwaluh</p>
       </div>
 
+      <!-- Person Selection -->
       <div class="hubungan-form">
-        <div class="form-group">
-          <label>Nama Anda</label>
-          <select id="namaAnda">
-            <option value="">Pilih nama Anda</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="namaAnda">Nama Anda *</label>
+            <select id="namaAnda" required onchange="previewPerson('A')">
+              <option value="">Pilih nama Anda</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="namaCari">Nama yang Dicari *</label>
+            <select id="namaCari" required onchange="previewPerson('B')">
+              <option value="">Pilih nama</option>
+            </select>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label>Nama yang Dicari</label>
-          <select id="namaCari">
-            <option value="">Pilih nama</option>
-          </select>
+        
+        <!-- Person Preview Cards -->
+        <div class="person-preview-grid">
+          <div class="person-preview" id="previewA">
+            <div class="preview-placeholder">Pilih orang pertama</div>
+          </div>
+          <div class="preview-arrow">⇄</div>
+          <div class="person-preview" id="previewB">
+            <div class="preview-placeholder">Pilih orang kedua</div>
+          </div>
         </div>
-
-        <button onclick="cekHubungan()" class="btn-primary">🔍 Cek Hubungan</button>
+        
+        <button onclick="cekHubungan()" class="btn-primary btn-full">
+          🔍 Cek Hubungan Kekerabatan
+        </button>
       </div>
 
-      <div id="hasilHubungan" class="hasil-hubungan"></div>
+      <!-- Relationship Result -->
+      <div id="hasilHubungan" class="hasil-hubungan" style="display:none;">
+        <div class="result-card relationship-result">
+          <div class="result-header">
+            <span class="result-icon" id="relIcon">🤝</span>
+            <h3 id="relJenis">Jenis Hubungan</h3>
+          </div>
+          <p id="relDeskripsi" class="result-desc">Deskripsi hubungan akan muncul di sini</p>
+          
+          <!-- Cultural Context -->
+          <div class="cultural-context" id="culturalContext">
+            <!-- Dynamic cultural info will be inserted here -->
+          </div>
+          
+          <!-- Rebu Warning -->
+          <div class="rebu-warning" id="rebuWarning" style="display:none;">
+            <strong>⚠️ PERHATIAN:</strong> <span id="rebuMessage"></span>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="result-actions">
+            <button class="btn-sm" onclick="shareResult()">📤 Bagikan</button>
+            <button class="btn-sm" onclick="showErtuturPhrase()">🗣️ Ertutur Phrase</button>
+          </div>
+        </div>
+      </div>
 
-      <!-- Menu Hubungan Lainnya -->
-      <div class="hubungan-menu">
-        <h3>Lihat Juga:</h3>
-        <div class="menu-grid">
-          <button onclick="showRakutSitelu()" class="menu-card">
+      <!-- Tutur Siwaluh Reference -->
+      <div class="section">
+        <h3 class="section-title">📚 8 Golongan Tutur Siwaluh</h3>
+        <div class="tutur-grid">
+          <div class="tutur-item">
+            <span class="tutur-num">1</span>
+            <strong>Puang Kalimbubu</strong>
+            <small>Kalimbubu dari Kalimbubu</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">2</span>
+            <strong>Kalimbubu</strong>
+            <small>Pemberi perempuan</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">3</span>
+            <strong>Senina</strong>
+            <small>Saudara semarga</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">4</span>
+            <strong>Sembuyak</strong>
+            <small>Satu kandungan</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">5</span>
+            <strong>Senina Sipemeren</strong>
+            <small>Ibu bersaudara</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">6</span>
+            <strong>Senina Siparibanen</strong>
+            <small>Istri bersaudara</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">7</span>
+            <strong>Senina Sendalanen</strong>
+            <small>Mertua sama</small>
+          </div>
+          <div class="tutur-item">
+            <span class="tutur-num">8</span>
+            <strong>Anak Beru</strong>
+            <small>Penerima perempuan</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Relationship Checks -->
+      <div class="section">
+        <h3 class="section-title">⚡ Cek Cepat</h3>
+        <div class="quick-actions">
+          <button class="action-card" onclick="showRakutSitelu()">
             <span>🤝</span>
             <span>Rakut Sitelu</span>
           </button>
-          <button onclick="showImpal()" class="menu-card">
-            <span>👶</span>
-            <span>Impalndu</span>
-          </button>
-          <button onclick="showSembuyak()" class="menu-card">
-            <span>👥</span>
-            <span>Sembuyak</span>
-          </button>
-          <button onclick="showKaliBubu()" class="menu-card">
+          <button class="action-card" onclick="showImpal()">
             <span>💑</span>
+            <span>Impal (Cross-Cousin)</span>
+          </button>
+          <button class="action-card" onclick="checkRebu()">
+            <span>⚠️</span>
+            <span>Cek Rebu</span>
+          </button>
+          <button class="action-card" onclick="showKaliBubu()">
+            <span>👥</span>
             <span>Kali Bubu</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- PAGE: KAMERA (Face Recognition) -->
+    <!-- ===== PAGE: REFERENSI ADAT ===== -->
+    <section id="page-referensi" class="page">
+      <div class="referensi-header">
+        <h2>📚 Referensi Adat Karo</h2>
+        <p>Panduan lengkap sistem kekerabatan</p>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="merga">Merga Silima</button>
+        <button class="tab-btn" data-tab="rakut">Rakut Sitelu</button>
+        <button class="tab-btn" data-tab="tutur">Tutur Siwaluh</button>
+        <button class="tab-btn" data-tab="rebu">Rebu & Pantang</button>
+        <button class="tab-btn" data-tab="kamus">Kamus Mini</button>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="tab-content">
+        
+        <!-- Tab: Merga Silima -->
+        <div id="tab-merga" class="tab-pane active">
+          <h3>🏛️ Merga Silima (Lima Marga Induk)</h3>
+          <p class="tab-desc">Setiap orang Karo memiliki salah satu dari lima marga ini</p>
+          
+          <div class="marga-detail-list">
+            <div class="marga-detail">
+              <h4>Ginting</h4>
+              <p><strong>Sub-marga:</strong> Ajartambun, Babo, Beras, Gajah, Suka, etc.</p>
+              <p><strong>Asal:</strong> Daerah Dairi, kemudian menyebar ke Tanah Karo</p>
+            </div>
+            <div class="marga-detail">
+              <h4>Karo-Karo</h4>
+              <p><strong>Sub-marga:</strong> Barus, Bukit, Gurusinga, Kaban, Kacaribu, etc.</p>
+              <p><strong>Ciri:</strong> Marga asli dataran tinggi Karo</p>
+            </div>
+            <div class="marga-detail">
+              <h4>Perangin-angin</h4>
+              <p><strong>Sub-marga:</strong> Bangun, Kacinambun, Kuta Buluh, etc.</p>
+              <p><strong>Sejarah:</strong> Berasal dari wilayah Langkat</p>
+            </div>
+            <div class="marga-detail">
+              <h4>Sembiring</h4>
+              <p><strong>Sub-marga:</strong> Brahmana, Bukit, Depari, etc.</p>
+              <p><strong>Catatan:</strong> Beberapa sub-marga memiliki asal-usul berbeda</p>
+            </div>
+            <div class="marga-detail">
+              <h4>Tarigan</h4>
+              <p><strong>Sub-marga:</strong> Gana-gana, Jambak, Kadas, etc.</p>
+              <p><strong>Asal:</strong> Wilayah Aceh Tamiang, kemudian ke Karo</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Rakut Sitelu -->
+        <div id="tab-rakut" class="tab-pane">
+          <h3>🤝 Rakut Sitelu (Tiga Ikatan)</h3>
+          <p class="tab-desc">Sistem kekerabatan inti yang mengatur hubungan sosial</p>
+          
+          <div class="rakut-detail-grid">
+            <div class="rakut-detail kalimbubu">
+              <h4>🏛️ Kalimbubu</h4>
+              <ul>
+                <li>Pihak <strong>pemberi perempuan</strong></li>
+                <li>Dihormati sebagai "Dibata Ni Idah" (Tuhan yang terlihat)</li>
+                <li><strong>Hak:</strong> menerima ulu mas, bere-bere, tempat duduk terhormat</li>
+                <li><strong>Tugas:</strong> memberi nasihat, menjaga perdamaian, memberkati</li>
+              </ul>
+            </div>
+            
+            <div class="rakut-detail senina">
+              <h4>👥 Senina / Sembuyak</h4>
+              <ul>
+                <li>Saudara <strong>semarga</strong> (patrilineal)</li>
+                <li><strong>Senina Sipemeren:</strong> ibu bersaudara kandung</li>
+                <li><strong>Senina Sendalanen:</strong> mertua sama / Sipengalon</li>
+                <li><strong>Tugas:</strong> memimpin musyawarah, menjaga nama marga</li>
+              </ul>
+            </div>
+            
+            <div class="rakut-detail anakberu">
+              <h4>🤝 Anak Beru</h4>
+              <ul>
+                <li>Pihak <strong>penerima perempuan</strong></li>
+                <li>"Hakim moral" dan pelaksana teknis acara adat</li>
+                <li><strong>Hak:</strong> warisan maneh-maneh, meminjam lahan</li>
+                <li><strong>Tugas:</strong> menyiapkan acara, menjaga harta kalimbubu</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="advice-box">
+            <strong>💡 Tips Ertutur:</strong> Saat bertemu orang Karo, selalu tanyakan 
+            "Beru kai kam?" (untuk perempuan) atau "Marga kai kam?" (untuk laki-laki) 
+            untuk menentukan tutur yang tepat.
+          </div>
+        </div>
+
+        <!-- Tab: Tutur Siwaluh -->
+        <div id="tab-tutur" class="tab-pane">
+          <h3>🗣️ Tutur Siwaluh (Delapan Tutur)</h3>
+          <p class="tab-desc">Pengembangan Rakut Sitelu untuk komunikasi sosial yang detail</p>
+          
+          <ol class="tutur-list">
+            <li>
+              <strong>Puang Kalimbubu</strong>
+              <small>Kalimbubu dari Kalimbubu - hubungan paling dihormati</small>
+            </li>
+            <li>
+              <strong>Kalimbubu</strong>
+              <small>Pihak pemberi perempuan (ibu/mertua)</small>
+            </li>
+            <li>
+              <strong>Senina</strong>
+              <small>Saudara semarga (patrilineal)</small>
+            </li>
+            <li>
+              <strong>Sembuyak</strong>
+              <small>Saudara satu kandungan/rahim</small>
+            </li>
+            <li>
+              <strong>Senina Sipemeren</strong>
+              <small>Ibu bersaudara kandung (satu ayah)</small>
+            </li>
+            <li>
+              <strong>Senina Siparibanen</strong>
+              <small>Istri bersaudara kandung</small>
+            </li>
+            <li>
+              <strong>Senina Sendalanen / Sipengalon</strong>
+              <small>Mertua sama / suami dari saudara istri</small>
+            </li>
+            <li>
+              <strong>Anak Beru</strong>
+              <small>Pihak penerima perempuan</small>
+            </li>
+          </ol>
+          
+          <div class="note-box">
+            <strong>📝 Catatan:</strong> Tutur Siwaluh digunakan dalam percakapan formal, 
+            upacara adat, dan saat ertutur (menelusur silsilah).
+          </div>
+        </div>
+
+        <!-- Tab: Rebu & Pantang -->
+        <div id="tab-rebu" class="tab-pane">
+          <h3>⚠️ Rebu & Pantang Pernikahan</h3>
+          <p class="tab-desc">Larangan adat dalam pernikahan Suku Karo</p>
+          
+          <div class="rebu-rules">
+            <div class="rule-card">
+              <h4>🚫 Rebu Dasar</h4>
+              <ul>
+                <li><strong>Sedonga:</strong> Dilarang menikah dengan marga yang sama</li>
+                <li><strong>One-marga:</strong> Pernikahan semarga dilarang (kecuali sub-marga berbeda & ada dispensasi)</li>
+                <li><strong>Kalimbubu dekat:</strong> Dilarang menikah dengan kalimbubu tingkat 1-2</li>
+              </ul>
+            </div>
+            
+            <div class="rule-card">
+              <h4>✅ Pengecualian</h4>
+              <ul>
+                <li><strong>Impal:</strong> Justru DIDORONG menikah (sepupu silang)</li>
+                <li><strong>Sub-marga berbeda:</strong> Bisa dengan persetujuan tetua adat</li>
+                <li><strong>Generasi jauh:</strong> Rebu bisa "dingin" setelah 5-7 generasi</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Peringatan:</strong> Pelanggaran Rebu dapat mengakibatkan 
+            <em>kesurupan, sakit berkepanjangan, atau nasib buruk</em> menurut kepercayaan adat. 
+            Selalu konsultasi dengan <strong>perkolong-kolong</strong> (tetua adat) sebelum menikah.
+          </div>
+        </div>
+
+        <!-- Tab: Kamus Mini -->
+        <div id="tab-kamus" class="tab-pane">
+          <h3>📖 Kamus Mini Karo-Indonesia</h3>
+          <p class="tab-desc">Istilah penting dalam budaya Karo</p>
+          
+          <div class="dictionary-grid">
+            <div class="dict-item">
+              <strong>Mejuah-juah</strong>
+              <small>Salam sejahtera (seperti "selamat pagi/siang")</small>
+            </div>
+            <div class="dict-item">
+              <strong>Ertutur</strong>
+              <small>Tradisi menelusur silsilah kekerabatan</small>
+            </div>
+            <div class="dict-item">
+              <strong>Beru</strong>
+              <small>Nama marga ayah untuk perempuan Karo</small>
+            </div>
+            <div class="dict-item">
+              <strong>Bere-bere</strong>
+              <small>Beru dari ibu kandung, muncul saat ertutur</small>
+            </div>
+            <div class="dict-item">
+              <strong>Ndehara</strong>
+              <small>Pasangan (suami/istri)</small>
+            </div>
+            <div class="dict-item">
+              <strong>Sangkep Nggeluh</strong>
+              <small>Kelengkapan hidup (filosofi Karo)</small>
+            </div>
+            <div class="dict-item">
+              <strong>Runggu</strong>
+              <small>Musyawarah adat untuk menyelesaikan masalah</small>
+            </div>
+            <div class="dict-item">
+              <strong>Ose</strong>
+              <small>Pakaian adat kebesaran Suku Karo</small>
+            </div>
+            <div class="dict-item">
+              <strong>Ulu Mas</strong>
+              <small>Uang adat yang diberikan ke Kalimbubu</small>
+            </div>
+            <div class="dict-item">
+              <strong>Maneh-maneh</strong>
+              <small>Warisan dari Kalimbubu ke Anak Beru</small>
+            </div>
+          </div>
+          
+          <button class="btn-outline" onclick="expandDictionary()">📚 Lihat Semua Istilah</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== PAGE: KAMERA / FACE SCAN ===== -->
     <section id="page-kamera" class="page">
       <div class="kamera-header">
         <h2>📷 Face Recognition</h2>
-        <p>Scan wajah untuk identifikasi</p>
+        <p>Scan wajah untuk identifikasi cepat <small>(fitur eksperimental)</small></p>
       </div>
 
       <div class="kamera-container">
-        <video id="videoKamera" autoplay playsinline></video>
+        <video id="videoKamera" autoplay playsinline muted></video>
         <canvas id="canvasKamera" hidden></canvas>
         
+        <!-- Camera Controls -->
         <div class="kamera-controls">
-          <button onclick="ambilFoto()" class="btn-shutter">📷</button>
+          <button id="btnStartCamera" class="btn-primary" onclick="startKamera()">▶️ Mulai Kamera</button>
+          <button id="btnCapture" class="btn-shutter" onclick="ambilFoto()" disabled>📷</button>
+          <button id="btnStopCamera" class="btn-danger" onclick="stopKamera()" disabled>⏹️ Stop</button>
+        </div>
+        
+        <!-- Permission Helper -->
+        <div id="cameraHelp" class="camera-help" style="display:none;">
+          <p>🔐 Izinkan akses kamera untuk menggunakan fitur ini</p>
+          <button class="btn-sm" onclick="requestCameraPermission()">Berikan Izin</button>
         </div>
       </div>
 
-      <div id="hasilRecognition" class="hasil-recognition"></div>
+      <!-- Recognition Result -->
+      <div id="hasilRecognition" class="hasil-recognition" style="display:none;">
+        <!-- Dynamic result will be inserted here -->
+      </div>
 
+      <!-- Recognition Info -->
       <div class="recognition-info">
-        <p>💡 Tips: Posisikan wajah di tengah kamera dengan pencayaan yang cukup</p>
+        <h4>💡 Tips Penggunaan:</h4>
+        <ul>
+          <li>Posisikan wajah di tengah frame dengan pencahayaan cukup</li>
+          <li>Lepaskan kacamata hitam atau topi yang menutupi wajah</li>
+          <li>Fitur ini menggunakan pencocokan nama, bukan AI face recognition</li>
+          <li>Hasil lebih akurat jika foto profil sudah diupload</li>
+        </ul>
+        <small class="disclaimer">⚠️ Data wajah tidak disimpan di server, hanya untuk pencocokan lokal</small>
       </div>
     </section>
 
   </main>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div id="toast" class="toast">
+    <span id="toastMessage"></span>
+    <button class="toast-close" onclick="hideToast()">×</button>
+  </div>
 
+  <!-- ===== MODAL: ERTUTUR SIMULATOR ===== -->
+  <div id="modalErtutur" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🗣️ Ertutur Simulator</h3>
+        <button class="modal-close" onclick="closeModal('modalErtutur')">×</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Latihan bertutur dengan orang Karo:</strong></p>
+        
+        <div class="ertutur-chat">
+          <div class="chat-bubble other">
+            <strong>Lawan Bicara:</strong>
+            <p id="ertuturQuestion">Beru kai kam turang?</p>
+          </div>
+          <div class="chat-bubble self">
+            <strong>Anda:</strong>
+            <input type="text" id="ertuturAnswer" placeholder="Jawab di sini..." 
+                   onkeypress="if(event.key==='Enter') checkErtuturAnswer()">
+            <button class="btn-sm" onclick="checkErtuturAnswer()">✓ Kirim</button>
+          </div>
+        </div>
+        
+        <div id="ertuturFeedback" class="ertutur-feedback"></div>
+        
+        <div class="ertutur-actions">
+          <button class="btn-outline" onclick="nextErtuturQuestion()">🔄 Soal Berikutnya</button>
+          <button class="btn-primary" onclick="showErtuturHint()">💡 Petunjuk</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>🌳 Trombo Karo v2.0</p>
+      <p class="footer-desc">Melestarikan budaya Karo melalui teknologi</p>
+      <div class="footer-links">
+        <a href="#" onclick="showPage('referensi')">📚 Referensi</a>
+        <a href="#" onclick="exportData()">📥 Export Data</a>
+        <a href="https://github.com/tinembok/trombo-karo" target="_blank">🐙 GitHub</a>
+      </div>
+      <small class="footer-copyright">© 2024 - Dibuat dengan ❤️ untuk Suku Karo</small>
+    </div>
+  </footer>
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script src="config.js"></script>
   <script src="app.js"></script>
+  
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('✅ Service Worker registered'))
+          .catch(err => console.log('❌ Service Worker failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>
