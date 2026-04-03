@@ -186,9 +186,50 @@ function hapusDynamicField(btn) {
 }
 
 // Wrapper functions
+// ===== FUNGSI TAMBAH INPUT DINAMIS (FIXED) =====
+
 function tambahAnak() {
-  const margaBapa = document.getElementById('marga')?.value || '';
-  tambahDynamicField('anak', 'anakContainer', margaBapa);
+  anakCount++;
+  const container = document.getElementById('anakContainer');
+  if (!container) return; // Safety check
+
+  const div = document.createElement('div');
+  div.className = 'dynamic-input';
+  
+  // Perbaikan syntax HTML string
+  div.innerHTML = `
+    <input type="text" name="anak[]" placeholder="Nama anak ke-${anakCount}" required> 
+    <button type="button" class="btn-remove" onclick="hapusAnak(this)">×</button>
+  `;
+  
+  container.appendChild(div);
+}
+
+function hapusAnak(btn) {
+  btn.parentElement.remove();
+  anakCount--;
+}
+
+function tambahSaudara() {
+  saudaraCount++;
+  const container = document.getElementById('saudaraContainer');
+  if (!container) return; // Safety check
+
+  const div = document.createElement('div');
+  div.className = 'dynamic-input';
+  
+  // Perbaikan syntax HTML string
+  div.innerHTML = `
+    <input type="text" name="saudara[]" placeholder="Nama senina ke-${saudaraCount}"> 
+    <button type="button" class="btn-remove" onclick="hapusSaudara(this)">×</button>
+  `;
+  
+  container.appendChild(div);
+}
+
+function hapusSaudara(btn) {
+  btn.parentElement.remove();
+  saudaraCount--;
 }
 
 function tambahSenina() {
@@ -201,7 +242,6 @@ function tambahSaudaraNdehara() {
   tambahDynamicField('saudaraNdehara', 'saudaraNdeharaContainer', margaNdehara);
 }
 
-function hapusAnak(btn) { hapusDynamicField(btn); }
 function hapusSenina(btn) { hapusDynamicField(btn); }
 function hapusSaudaraNdehara(btn) { hapusDynamicField(btn); }
 
