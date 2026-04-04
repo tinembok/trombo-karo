@@ -4,129 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌳 Trombo Karo</title>
-  <meta name="mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="uis-gara-bg">
-
-  <!-- Loading -->
-  <div id="loading" class="loading-screen">
-    <div class="spinner uis-gara-spinner"></div>
-    <p>Mejuah-juah... Memuat Trombo Karo</p>
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Memuat Trombo Karo...</p>
   </div>
 
-  <!-- Header -->
-  <header class="header uis-gara-header">
-    <div class="header-content">
-      <h1>🌳 Trombo Karo</h1>
-      <p>Silsilah Keluarga Karo</p>
-    </div>
-    <button class="btn-menu" onclick="toggleMenu()">☰</button>
+  <header class="header">
+    <h1>🌳 Trombo Karo</h1>
+    <p>Silsilah Keluarga Karo</p>
   </header>
 
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" class="mobile-menu">
-    <a href="#" onclick="showPage('home');toggleMenu()">🏠 Beranda</a>
-    <a href="#" onclick="showPage('input');toggleMenu()">📝 Input</a>
-    <a href="#" onclick="showPage('cari');toggleMenu()">🔍 Cari</a>
-    <a href="#" onclick="showPage('hubungan');toggleMenu()">👥 Hubungan</a>
-  </div>
+  <nav class="nav">
+    <button onclick="showPage('home')">🏠</button>
+    <button onclick="showPage('input')">📝</button>
+    <button onclick="showPage('cari')">🔍</button>
+  </nav>
 
-  <!-- Main -->
   <main class="container">
-    
-    <!-- Nav Desktop -->
-    <nav class="nav-menu">
-      <button class="nav-btn active" onclick="showPage('home')">🏠</button>
-      <button class="nav-btn" onclick="showPage('input')">📝</button>
-      <button class="nav-btn" onclick="showPage('cari')">🔍</button>
-      <button class="nav-btn" onclick="showPage('hubungan')">👥</button>
-    </nav>
-
-    <!-- PAGE: HOME -->
+    <!-- HOME -->
     <section id="page-home" class="page active">
-      <div class="hero uis-gara-hero">
+      <div class="hero">
         <h2>Mejuah-juah! 🙏</h2>
-        <p>Temukan Rakut Sitelu & Tutur Siwaluh keluarga Anda</p>
-        <div class="hero-actions">
-          <button class="btn-primary" onclick="showPage('input')">➕ Input Data</button>
-          <button class="btn-outline" onclick="showPage('cari')">🔍 Cari</button>
-        </div>
+        <p>Temukan Rakut Sitelu & Tutur Siwaluh</p>
+        <button class="btn-primary" onclick="showPage('input')">➕ Input Data</button>
       </div>
-
-      <div class="stats-grid">
-        <div class="stat-card uis-gara-card">
-          <span class="stat-number" id="totalKeluarga">0</span>
-          <span class="stat-label">Keluarga</span>
-        </div>
-        <div class="stat-card uis-gara-card">
-          <span class="stat-number">5</span>
-          <span class="stat-label">Merga Silima</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <h3>🏛️ Merga Silima</h3>
-        <div class="marga-grid">
-          <div class="marga-item uis-gara-card" onclick="filterByMarga('Ginting')">
-            <span class="marga-icon">G</span><span>Ginting</span>
-            <small id="count-ginting">0</small>
-          </div>
-          <div class="marga-item uis-gara-card" onclick="filterByMarga('Karo-Karo')">
-            <span class="marga-icon">K</span><span>Karo-Karo</span>
-            <small id="count-karo">0</small>
-          </div>
-          <div class="marga-item uis-gara-card" onclick="filterByMarga('Perangin-angin')">
-            <span class="marga-icon">P</span><span>Perangin-angin</span>
-            <small id="count-perangin">0</small>
-          </div>
-          <div class="marga-item uis-gara-card" onclick="filterByMarga('Sembiring')">
-            <span class="marga-icon">S</span><span>Sembiring</span>
-            <small id="count-sembiring">0</small>
-          </div>
-          <div class="marga-item uis-gara-card" onclick="filterByMarga('Tarigan')">
-            <span class="marga-icon">T</span><span>Tarigan</span>
-            <small id="count-tarigan">0</small>
-          </div>
-        </div>
+      <div class="stat">
+        <span id="totalKeluarga">0</span> Keluarga Terdaftar
       </div>
     </section>
 
-    <!-- PAGE: INPUT (SIMPLIFIED) -->
+    <!-- INPUT -->
     <section id="page-input" class="page">
-      <div class="form-header">
-        <h2>📝 Input Data</h2>
-        <p>Lengkapi data untuk akurasi silsilah</p>
-      </div>
-
-      <form id="formInput" class="input-form uis-gara-form">
-        
-        <!-- Foto -->
-        <fieldset class="form-section">
+      <form id="formInput" class="form">
+        <fieldset>
           <legend>📷 Foto</legend>
-          <div class="photo-upload">
-            <div class="photo-preview uis-gara-border" id="photoPreview" onclick="document.getElementById('fotoInput').click()">
-              <span class="photo-icon">📷</span>
-              <small>Klik untuk foto</small>
-            </div>
-            <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
-            <button type="button" class="btn-sm" id="btnHapusFoto" onclick="hapusFoto()" style="display:none">🗑️ Hapus</button>
+          <div class="photo-preview" id="photoPreview" onclick="document.getElementById('fotoInput').click()">
+            <span>📷</span><small>Klik untuk foto</small>
           </div>
+          <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
         </fieldset>
 
-        <!-- Data Diri -->
-        <fieldset class="form-section">
+        <fieldset>
           <legend>👤 Data Diri</legend>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nama Lengkap *</label>
-              <input type="text" id="nama" name="nama" placeholder="Contoh: Beru Ginting" required>
+          <div class="row">
+            <div class="field">
+              <label>Nama *</label>
+              <input type="text" id="nama" required>
             </div>
-            <div class="form-group">
+            <div class="field">
               <label>Marga *</label>
-              <select id="marga" name="marga" required>
-                <option value="">Pilih Marga</option>
+              <select id="marga" required>
+                <option value="">Pilih</option>
                 <option value="Ginting">Ginting</option>
                 <option value="Karo-Karo">Karo-Karo</option>
                 <option value="Perangin-angin">Perangin-angin</option>
@@ -135,44 +66,38 @@
               </select>
             </div>
           </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Bapak *</label>
-              <input type="text" id="bapa" name="bapa" placeholder="Nama ayah" required>
-              <small class="hint">Marga otomatis: <span id="hintMargaBapa">-</span></small>
+          <div class="row">
+            <div class="field">
+              <label>Bapa *</label>
+              <input type="text" id="bapa" required>
             </div>
-            <div class="form-group">
-              <label>Ibu *</label>
-              <input type="text" id="nande" name="nande" placeholder="Nama ibu" required>
+            <div class="field">
+              <label>Nande *</label>
+              <input type="text" id="nande" required>
             </div>
           </div>
-
-          <div class="form-group" id="beruGroup" style="display:none">
-            <label>Beru <small>(untuk perempuan)</small></label>
-            <input type="text" id="beru" name="beru" placeholder="Contoh: Beru Ginting">
+          <div class="field" id="beruGroup" style="display:none">
+            <label>Beru (perempuan)</label>
+            <input type="text" id="beru">
           </div>
-
-          <div class="form-group">
-            <label>Senina / Turang</label>
+          <div class="field">
+            <label>Senina</label>
             <div id="seninaContainer"></div>
-            <button type="button" class="btn-add" onclick="tambahSenina()">+ Tambah Senina</button>
+            <button type="button" class="btn-add" onclick="tambahSenina()">+ Tambah</button>
           </div>
         </fieldset>
 
-        <!-- Ndehara (Pasangan) -->
-        <fieldset class="form-section">
-          <legend>💑 Ndehara (Pasangan)</legend>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nama Pasangan</label>
-              <input type="text" id="ndeharaNama" name="ndeharaNama" placeholder="Nama suami/istri">
+        <fieldset>
+          <legend>💑 Ndehara</legend>
+          <div class="row">
+            <div class="field">
+              <label>Nama</label>
+              <input type="text" id="ndeharaNama">
             </div>
-            <div class="form-group">
-              <label>Marga Pasangan</label>
-              <select id="margaNdehara" name="margaNdehara">
-                <option value="">Pilih Marga</option>
+            <div class="field">
+              <label>Marga</label>
+              <select id="margaNdehara">
+                <option value="">Pilih</option>
                 <option value="Ginting">Ginting</option>
                 <option value="Karo-Karo">Karo-Karo</option>
                 <option value="Perangin-angin">Perangin-angin</option>
@@ -181,103 +106,45 @@
               </select>
             </div>
           </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Bapak</label>
-              <input type="text" id="bapaNdehara" name="bapaNdehara" placeholder="Nama ayah pasangan">
-            </div>
-            <div class="form-group">
-              <label>Ibu</label>
-              <input type="text" id="nandeNdehara" name="nandeNdehara" placeholder="Nama ibu pasangan">
-            </div>
-          </div>
-
-          <div class="form-group" id="beruNdeharaGroup" style="display:none">
-            <label>Beru Pasangan</label>
-            <input type="text" id="beruNdehara" name="beruNdehara" placeholder="Contoh: Beru Tarigan">
-          </div>
-
-          <div class="form-group">
-            <label>Senina Pasangan</label>
-            <div id="saudaraNdeharaContainer"></div>
-            <button type="button" class="btn-add" onclick="tambahSaudaraNdehara()">+ Tambah</button>
-          </div>
         </fieldset>
 
-        <!-- Anak -->
-        <fieldset class="form-section">
+        <fieldset>
           <legend>👶 Anak</legend>
           <div id="anakContainer"></div>
           <button type="button" class="btn-add" onclick="tambahAnak()">+ Tambah Anak</button>
-          <small class="hint">Marga anak otomatis mengikuti Bapak</small>
         </fieldset>
 
-        <!-- Kontak -->
-        <fieldset class="form-section">
+        <fieldset>
           <legend>📞 Kontak</legend>
-          <div class="form-group">
+          <div class="field">
             <label>Alamat</label>
-            <textarea id="alamat" name="alamat" rows="2" placeholder="Desa/Kecamatan"></textarea>
+            <textarea id="alamat" rows="2"></textarea>
           </div>
-          <div class="form-group">
-            <label>No. WhatsApp</label>
-            <input type="tel" id="nowa" name="nowa" placeholder="0812xxxxxxxx">
+          <div class="field">
+            <label>WhatsApp</label>
+            <input type="tel" id="nowa" placeholder="0812...">
           </div>
         </fieldset>
 
-        <!-- Actions -->
-        <div class="form-actions">
+        <div class="actions">
           <button type="button" class="btn-outline" onclick="resetForm()">🔄 Reset</button>
           <button type="submit" class="btn-primary" id="btnSubmit">💾 Simpan</button>
         </div>
       </form>
     </section>
 
-    <!-- PAGE: CARI -->
+    <!-- CARI -->
     <section id="page-cari" class="page">
-      <h2>🔍 Cari Keluarga</h2>
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Cari nama, marga, desa..." onkeyup="handleSearchInput(event)">
-        <button class="btn-search" onclick="cariKeluarga()">🔍</button>
+        <input type="text" id="searchInput" placeholder="Cari nama, marga...">
+        <button onclick="cariKeluarga()">🔍</button>
       </div>
-      <div id="searchResults" class="results-container"></div>
-      <div id="searchStats" class="search-stats" style="display:none">
-        <small id="resultCount">0 hasil</small>
-      </div>
+      <div id="searchResults"></div>
     </section>
-
-    <!-- PAGE: HUBUNGAN -->
-    <section id="page-hubungan" class="page">
-      <h2>👥 Cek Hubungan</h2>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nama Anda</label>
-          <select id="namaAnda"><option value="">Pilih nama</option></select>
-        </div>
-        <div class="form-group">
-          <label>Yang Dicari</label>
-          <select id="namaCari"><option value="">Pilih nama</option></select>
-        </div>
-      </div>
-      <button class="btn-primary btn-full" onclick="cekHubungan()">🔍 Cek Hubungan</button>
-      <div id="hasilHubungan" class="hasil-hubungan"></div>
-    </section>
-
   </main>
 
-  <!-- Toast -->
-  <div id="toast" class="toast">
-    <span id="toastMessage"></span>
-    <button class="toast-close" onclick="this.parentElement.classList.remove('show')">×</button>
-  </div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <p>🌳 Trombo Karo • Mejuah-juah</p>
-  </footer>
-
-  <!-- Scripts -->
+  <div id="toast" class="toast"><span id="toastMsg"></span></div>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
