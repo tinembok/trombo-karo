@@ -4,147 +4,140 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌳 Trombo Karo</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #fffef9; color: #1a1a1a; line-height: 1.6; padding: 16px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { background: linear-gradient(135deg, #8B0000, #1a1a1a); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+    .form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 2px solid #8B0000; }
+    fieldset { border: none; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px dashed rgba(139,0,0,0.2); }
+    legend { font-weight: 600; color: #8B0000; margin-bottom: 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .field input, .field select, .field textarea { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .field input:focus, .field select:focus { outline: none; border-color: #8B0000; }
+    .photo-preview { width: 120px; height: 120px; margin: 0 auto 12px; border: 2px dashed #8B0000; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #f9f9f9; }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .btn-primary { background: #8B0000; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; cursor: pointer; width: 100%; }
+    .btn-primary:hover { background: #1a1a1a; }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-add { background: none; border: 2px dashed #8B0000; color: #8B0000; padding: 8px 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 8px; }
+    .loading { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #8B0000; border-top-color: #D4AF37; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body class="uis-gara-bg">
+<body>
   <div id="loading" class="loading">
     <div class="spinner"></div>
-    <p>Memuat Trombo Karo...</p>
+    <p>Memuat...</p>
   </div>
 
-  <header class="header">
-    <h1>🌳 Trombo Karo</h1>
-    <p>Silsilah Keluarga Karo</p>
-  </header>
+  <div class="container">
+    <header class="header">
+      <h1>🌳 Trombo Karo</h1>
+      <p>Silsilah Keluarga Karo</p>
+    </header>
 
-  <nav class="nav">
-    <button onclick="showPage('home')">🏠</button>
-    <button onclick="showPage('input')">📝</button>
-    <button onclick="showPage('cari')">🔍</button>
-  </nav>
-
-  <main class="container">
-    <!-- HOME -->
-    <section id="page-home" class="page active">
-      <div class="hero">
-        <h2>Mejuah-juah! 🙏</h2>
-        <p>Temukan Rakut Sitelu & Tutur Siwaluh</p>
-        <button class="btn-primary" onclick="showPage('input')">➕ Input Data</button>
-      </div>
-      <div class="stat">
-        <span id="totalKeluarga">0</span> Keluarga Terdaftar
-      </div>
-    </section>
-
-    <!-- INPUT -->
-    <section id="page-input" class="page">
-      <form id="formInput" class="form">
-        <fieldset>
-          <legend>📷 Foto</legend>
-          <div class="photo-preview" id="photoPreview" onclick="document.getElementById('fotoInput').click()">
-            <span>📷</span><small>Klik untuk foto</small>
-          </div>
-          <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
-        </fieldset>
-
-        <fieldset>
-          <legend>👤 Data Diri</legend>
-          <div class="row">
-            <div class="field">
-              <label>Nama *</label>
-              <input type="text" id="nama" required>
-            </div>
-            <div class="field">
-              <label>Marga *</label>
-              <select id="marga" required>
-                <option value="">Pilih</option>
-                <option value="Ginting">Ginting</option>
-                <option value="Karo-Karo">Karo-Karo</option>
-                <option value="Perangin-angin">Perangin-angin</option>
-                <option value="Sembiring">Sembiring</option>
-                <option value="Tarigan">Tarigan</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Bapa *</label>
-              <input type="text" id="bapa" required>
-            </div>
-            <div class="field">
-              <label>Nande *</label>
-              <input type="text" id="nande" required>
-            </div>
-          </div>
-          <div class="field" id="beruGroup" style="display:none">
-            <label>Beru (perempuan)</label>
-            <input type="text" id="beru">
-          </div>
-          <div class="field">
-            <label>Senina</label>
-            <div id="seninaContainer"></div>
-            <button type="button" class="btn-add" onclick="tambahSenina()">+ Tambah</button>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>💑 Ndehara</legend>
-          <div class="row">
-            <div class="field">
-              <label>Nama</label>
-              <input type="text" id="ndeharaNama">
-            </div>
-            <div class="field">
-              <label>Marga</label>
-              <select id="margaNdehara">
-                <option value="">Pilih</option>
-                <option value="Ginting">Ginting</option>
-                <option value="Karo-Karo">Karo-Karo</option>
-                <option value="Perangin-angin">Perangin-angin</option>
-                <option value="Sembiring">Sembiring</option>
-                <option value="Tarigan">Tarigan</option>
-              </select>
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>👶 Anak</legend>
-          <div id="anakContainer"></div>
-          <button type="button" class="btn-add" onclick="tambahAnak()">+ Tambah Anak</button>
-        </fieldset>
-
-        <fieldset>
-          <legend>📞 Kontak</legend>
-          <div class="field">
-            <label>Alamat</label>
-            <textarea id="alamat" rows="2"></textarea>
-          </div>
-          <div class="field">
-            <label>WhatsApp</label>
-            <input type="tel" id="nowa" placeholder="0812...">
-          </div>
-        </fieldset>
-
-        <div class="actions">
-          <button type="button" class="btn-outline" onclick="resetForm()">🔄 Reset</button>
-          <button type="submit" class="btn-primary" id="btnSubmit">💾 Simpan</button>
+    <form id="formInput" class="form">
+      <!-- Foto -->
+      <fieldset>
+        <legend>📷 Foto</legend>
+        <div class="photo-preview" id="photoPreview" onclick="document.getElementById('fotoInput').click()">
+          <span style="font-size:32px">📷</span><br><small>Klik untuk foto</small>
         </div>
-      </form>
-    </section>
+        <input type="file" id="fotoInput" accept="image/*" capture="camera" hidden>
+      </fieldset>
 
-    <!-- CARI -->
-    <section id="page-cari" class="page">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Cari nama, marga...">
-        <button onclick="cariKeluarga()">🔍</button>
-      </div>
-      <div id="searchResults"></div>
-    </section>
-  </main>
+      <!-- Data Diri -->
+      <fieldset>
+        <legend>👤 Data Diri</legend>
+        <div class="row">
+          <div class="field">
+            <label>Nama Lengkap *</label>
+            <input type="text" id="nama" required>
+          </div>
+          <div class="field">
+            <label>Marga *</label>
+            <select id="marga" required>
+              <option value="">Pilih</option>
+              <option value="Ginting">Ginting</option>
+              <option value="Karo-Karo">Karo-Karo</option>
+              <option value="Perangin-angin">Perangin-angin</option>
+              <option value="Sembiring">Sembiring</option>
+              <option value="Tarigan">Tarigan</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Bapa *</label>
+            <input type="text" id="bapa" required>
+          </div>
+          <div class="field">
+            <label>Nande *</label>
+            <input type="text" id="nande" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Beru (opsional)</label>
+          <input type="text" id="beru" placeholder="Contoh: Beru Ginting">
+        </div>
+        <div class="field">
+          <label>Senina / Turang</label>
+          <div id="seninaContainer"></div>
+          <button type="button" class="btn-add" onclick="tambahSenina()">+ Tambah Senina</button>
+        </div>
+      </fieldset>
 
-  <div id="toast" class="toast"><span id="toastMsg"></span></div>
-  <script src="config.js"></script>
+      <!-- Ndehara -->
+      <fieldset>
+        <legend>💑 Ndehara (Pasangan)</legend>
+        <div class="row">
+          <div class="field">
+            <label>Nama</label>
+            <input type="text" id="ndeharaNama">
+          </div>
+          <div class="field">
+            <label>Marga</label>
+            <select id="margaNdehara">
+              <option value="">Pilih</option>
+              <option value="Ginting">Ginting</option>
+              <option value="Karo-Karo">Karo-Karo</option>
+              <option value="Perangin-angin">Perangin-angin</option>
+              <option value="Sembiring">Sembiring</option>
+              <option value="Tarigan">Tarigan</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Anak -->
+      <fieldset>
+        <legend>👶 Anak</legend>
+        <div id="anakContainer"></div>
+        <button type="button" class="btn-add" onclick="tambahAnak()">+ Tambah Anak</button>
+      </fieldset>
+
+      <!-- Kontak -->
+      <fieldset>
+        <legend>📞 Kontak</legend>
+        <div class="field">
+          <label>Alamat</label>
+          <textarea id="alamat" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>WhatsApp</label>
+          <input type="tel" id="nowa" placeholder="0812...">
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn-primary" id="btnSubmit">💾 Simpan Data</button>
+    </form>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
