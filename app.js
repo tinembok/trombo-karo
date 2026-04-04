@@ -43,25 +43,27 @@ function loadData() {
 }
 
 function tambahAnak() {
-  var c = document.getElementById('anakContainer');
-  if (!c) return;
-  var n = c.children.length + 1;
-  var d = document.createElement('div');
-  d.className = 'dyn';
-  d.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ke-' + n + '"><button type="button" onclick="this.parentElement.remove()">×</button>';
-  c.appendChild(d);
+  var container = document.getElementById('anakContainer');
+  if (!container) return;
+  var count = container.children.length + 1;
+  var div = document.createElement('div');
+  div.className = 'dynamic-item';
+  // Gunakan string biasa ('...') agar aman
+  div.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ke-' + count + '">' +
+                  '<button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>';
+  container.appendChild(div);
 }
 
 function tambahSenina() {
-  var c = document.getElementById('seninaContainer');
-  if (!c) return;
-  var n = c.children.length + 1;
-  var d = document.createElement('div');
-  d.className = 'dyn';
-  d.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ke-' + n + '"><button type="button" onclick="this.parentElement.remove()">×</button>';
-  c.appendChild(d);
+  var container = document.getElementById('seninaContainer');
+  if (!container) return;
+  var count = container.children.length + 1;
+  var div = document.createElement('div');
+  div.className = 'dynamic-item';
+  div.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ke-' + count + '">' +
+                  '<button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>';
+  container.appendChild(div);
 }
-
 function handleFoto(e) {
   var f = e.target.files[0];
   if (!f) return;
