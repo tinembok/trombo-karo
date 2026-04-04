@@ -1,3 +1,8 @@
+/* TROMBO KARO - app.js MINIMAL (NO SYNTAX ERRORS) */
+var CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec'
+};
+
 var allData = [];
 var fotoBase64 = null;
 
@@ -17,53 +22,50 @@ function setupEvents() {
   if (form) form.addEventListener('submit', handleSubmit);
   var foto = document.getElementById('fotoInput');
   if (foto) foto.addEventListener('change', handleFoto);
-  var nama = document.getElementById('nama');
-  if (nama) nama.addEventListener('input', toggleBeru);
-}
-
-function toggleBeru() {
-  var val = document.getElementById('nama').value.toLowerCase();
-  var isFemale = val.indexOf('beru ') === 0 || ['puteri','siti','rahma','nur','indah','maya','lina','wati','sari','ani','dewi'].some(function(h) { return val.indexOf(h) !== -1; });
-  var group = document.getElementById('beruGroup');
-  if (group) group.style.display = isFemale ? 'block' : 'none';
-  if (!isFemale && document.getElementById('beru')) document.getElementById('beru').value = '';
 }
 
 function loadData() {
   fetch(CONFIG.SCRIPT_URL + '?action=getAll')
-    .then(function(r) { return r.json(); })
+    .then(function(res) { return res.json(); })
     .then(function(json) {
-      if (json.success) {
-        allData = json.data;
-        document.getElementById('totalKeluarga').textContent = allData.length;
-        console.log('✅ Data:', allData.length);
+      if (json && json.success) {
+        allData = json.data || [];
+        console.log('✅ Data dimuat:', allData.length);
+        updateStats();
       }
     })
-    .catch(function() { console.log('⚠️ Offline'); });
+    .catch(function(e) { console.log('⚠️ Offline:', e); });
 }
 
+function updateStats() {
+  var el = document.getElementById('totalKeluarga');
+  if (el) el.textContent = allData.length;
+}
+
+/* ===== DYNAMIC FIELDS - SIMPLE STRING CONCAT ===== */
 function tambahAnak() {
-  var container = document.getElementById('anakContainer');
-  if (!container) return;
-  var count = container.children.length + 1;
-  var div = document.createElement('div');
-  div.className = 'dynamic-item';
-  // Gunakan string biasa ('...') agar aman
-  div.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ke-' + count + '">' +
-                  '<button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>';
-  container.appendChild(div);
+  var c = document.getElementById('anakContainer');
+  if (!c) return;
+  var n = c.children.length + 1;
+  var d = document.createElement('div');
+  d.className = 'dyn';
+  d.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ke-' + n + '">' +
+                '<button type="button" onclick="this.parentElement.remove()">×</button>';
+  c.appendChild(d);
 }
 
 function tambahSenina() {
-  var container = document.getElementById('seninaContainer');
-  if (!container) return;
-  var count = container.children.length + 1;
-  var div = document.createElement('div');
-  div.className = 'dynamic-item';
-  div.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ke-' + count + '">' +
-                  '<button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>';
-  container.appendChild(div);
+  var c = document.getElementById('seninaContainer');
+  if (!c) return;
+  var n = c.children.length + 1;
+  var d = document.createElement('div');
+  d.className = 'dyn';
+  d.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ke-' + n + '">' +
+                '<button type="button" onclick="this.parentElement.remove()">×</button>';
+  c.appendChild(d);
 }
+
+/* ===== FOTO ===== */
 function handleFoto(e) {
   var f = e.target.files[0];
   if (!f) return;
@@ -84,6 +86,7 @@ function updatePreview() {
   }
 }
 
+/* ===== COLLECT INPUTS ===== */
 function collect(name) {
   var inputs = document.querySelectorAll('input[name="' + name + '"]');
   var arr = [];
@@ -93,6 +96,7 @@ function collect(name) {
   return arr;
 }
 
+/* ===== SUBMIT FORM ===== */
 function handleSubmit(e) {
   e.preventDefault();
   var btn = document.getElementById('btnSubmit');
@@ -126,7 +130,7 @@ function handleSubmit(e) {
   fd.append('action', 'save');
   fd.append('data', JSON.stringify(data));
 
-  fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: fd, mode: 'no-cors' })
+  fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: fd })
     .then(function() {
       alert('✅ Tersimpan!');
       document.getElementById('formInput').reset();
@@ -136,12 +140,11 @@ function handleSubmit(e) {
         var el = document.getElementById(id);
         if (el) el.innerHTML = '';
       });
-      toggleBeru();
       loadData();
     })
     .catch(function(err) {
       console.error(err);
-      alert('⚠️ Gagal mengirim');
+      alert('❌ Gagal: ' + err.message);
     })
     .finally(function() {
       btn.textContent = '💾 Simpan';
@@ -149,16 +152,20 @@ function handleSubmit(e) {
     });
 }
 
+/* ===== SEARCH ===== */
 function cariKeluarga() {
   var kw = document.getElementById('searchInput').value.toLowerCase().trim();
   var res = document.getElementById('searchResults');
   if (!kw) { res.innerHTML = ''; return; }
   
-  var f = allData.filter(function(d) {
-    return (d.nama && d.nama.toLowerCase().indexOf(kw) !== -1) ||
-           (d.marga && d.marga.toLowerCase().indexOf(kw) !== -1) ||
-           (d.bapa && d.bapa.toLowerCase().indexOf(kw) !== -1);
-  });
+  var f = [];
+  for (var i = 0; i < allData.length; i++) {
+    var d = allData[i];
+    if ((d.nama && d.nama.toLowerCase().indexOf(kw) !== -1) ||
+        (d.marga && d.marga.toLowerCase().indexOf(kw) !== -1)) {
+      f.push(d);
+    }
+  }
   
   if (f.length === 0) {
     res.innerHTML = '<div class="empty">🔍 Tidak ada hasil</div>';
@@ -166,37 +173,16 @@ function cariKeluarga() {
   }
   
   var html = '';
-  for (var i = 0; i < f.length; i++) {
-    var d = f[i];
-    html += '<div class="card"><b>' + (d.nama||'-') + '</b><br><small>' + (d.marga||'-') + '</small><br>👨 ' + (d.bapa||'-') + ' • 👩 ' + (d.nande||'-') + '</div>';
+  for (var j = 0; j < f.length; j++) {
+    var d = f[j];
+    html += '<div class="card"><b>' + (d.nama||'-') + '</b><br><small>' + (d.marga||'-') + '</small></div>';
   }
   res.innerHTML = html;
 }
 
+/* ===== NAV ===== */
 function showPage(p) {
   document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
   var t = document.getElementById('page-' + p);
   if (t) t.classList.add('active');
-}
-
-function resetForm() {
-  if (!confirm('Reset form?')) return;
-  document.getElementById('formInput').reset();
-  fotoBase64 = null;
-  updatePreview();
-  ['anakContainer','seninaContainer'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.innerHTML = '';
-  });
-  toggleBeru();
-}
-
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  var m = document.getElementById('toastMsg');
-  if (t && m) {
-    m.textContent = msg;
-    t.classList.add('show');
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
-  }
 }
