@@ -1,6 +1,6 @@
 /* TROMBO KARO - app.js MINIMAL (GUARANTEED WORKING) */
 var CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwSKqkSjM7Ea4p0CVGXW5IC1QZj7MTwGRZ5ibFz-TzMRd_OVEdaeb3nWkB0aDPIOlFI/exec'
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec'
 };
 
 var fotoBase64 = null;
