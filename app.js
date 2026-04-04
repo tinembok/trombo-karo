@@ -1,4 +1,4 @@
-/* TROMBO KARO - app.js MINIMAL (NO SYNTAX ERRORS) */
+/* TROMBO KARO - app.js MINIMAL & STABIL */
 var CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec'
 };
@@ -31,15 +31,10 @@ function loadData() {
       if (json && json.success) {
         allData = json.data || [];
         console.log('✅ Data dimuat:', allData.length);
-        updateStats();
+        document.getElementById('totalKeluarga').textContent = allData.length;
       }
     })
-    .catch(function(e) { console.log('⚠️ Offline:', e); });
-}
-
-function updateStats() {
-  var el = document.getElementById('totalKeluarga');
-  if (el) el.textContent = allData.length;
+    .catch(function(e) { console.log('⚠️ Offline'); });
 }
 
 /* ===== DYNAMIC FIELDS - SIMPLE STRING CONCAT ===== */
@@ -50,7 +45,7 @@ function tambahAnak() {
   var d = document.createElement('div');
   d.className = 'dyn';
   d.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ke-' + n + '">' +
-                '<button type="button" onclick="this.parentElement.remove()">×</button>';
+                '<button type="button" onclick="this.parentElement.remove()">x</button>';
   c.appendChild(d);
 }
 
@@ -61,7 +56,7 @@ function tambahSenina() {
   var d = document.createElement('div');
   d.className = 'dyn';
   d.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ke-' + n + '">' +
-                '<button type="button" onclick="this.parentElement.remove()">×</button>';
+                '<button type="button" onclick="this.parentElement.remove()">x</button>';
   c.appendChild(d);
 }
 
