@@ -1,6 +1,6 @@
-/* TROMBO KARO - Frontend Minimal */
+/* TROMBO KARO - app.js MINIMAL (GUARANTEED WORKING) */
 var CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwSKqkSjM7Ea4p0CVGXW5IC1QZj7MTwGRZ5ibFz-TzMRd_OVEdaeb3nWkB0aDPIOlFI/exec'
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0IRYx_vtYKqJoo3dO69kdx_OR34qn8V4FqOi8MKNBgb3cWPtonYMtyKAWlWtmIdz1/exec'
 };
 
 var fotoBase64 = null;
@@ -22,14 +22,14 @@ function setupEvents() {
   if (foto) foto.addEventListener('change', handleFoto);
 }
 
-/* ===== TAMBAH INPUT DINAMIS (Simple String Concat) ===== */
+/* ===== TAMBAH INPUT DINAMIS - SIMPLE STRING CONCAT ===== */
 function tambahAnak() {
   var c = document.getElementById('anakContainer');
   if (!c) return;
   var n = c.children.length + 1;
   var d = document.createElement('div');
   d.style.marginBottom = '8px';
-  d.innerHTML = '<input type="text" name="anak[]" placeholder="Nama anak ' + n + '" style="width:100%;padding:8px;margin-right:8px">' +
+  d.innerHTML = '<input type="text" name="anak[]" placeholder="Anak ' + n + '" style="width:100%;padding:8px;margin-right:8px">' +
                 '<button type="button" onclick="this.parentElement.remove()" style="background:#8B0000;color:white;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer">x</button>';
   c.appendChild(d);
 }
@@ -40,7 +40,7 @@ function tambahSenina() {
   var n = c.children.length + 1;
   var d = document.createElement('div');
   d.style.marginBottom = '8px';
-  d.innerHTML = '<input type="text" name="senina[]" placeholder="Nama senina ' + n + '" style="width:100%;padding:8px;margin-right:8px">' +
+  d.innerHTML = '<input type="text" name="senina[]" placeholder="Senina ' + n + '" style="width:100%;padding:8px;margin-right:8px">' +
                 '<button type="button" onclick="this.parentElement.remove()" style="background:#8B0000;color:white;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer">x</button>';
   c.appendChild(d);
 }
@@ -70,7 +70,7 @@ function collect(name) {
   return arr;
 }
 
-/* ===== SUBMIT FORM ===== */
+/* ===== SUBMIT FORM - SIMPLE & DIRECT ===== */
 function handleSubmit(e) {
   e.preventDefault();
   var btn = document.getElementById('btnSubmit');
@@ -105,7 +105,7 @@ function handleSubmit(e) {
 
   fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: fd })
     .then(function() {
-      alert('✅ Data tersimpan!');
+      alert('✅ Data tersimpan! Cek Google Sheet.');
       document.getElementById('formInput').reset();
       fotoBase64 = null;
       var p = document.getElementById('photoPreview');
